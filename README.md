@@ -1,2 +1,2 @@
 # ML_Project
-Machine_Learning Project
+Reinforcement Learning Project
