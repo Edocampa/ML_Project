@@ -59,11 +59,15 @@ class SimpleGridWorld:
             self.agent2_img = pygame.image.load(os.path.join(asset_dir, "robot.png"))
             self.victim_img = pygame.image.load(os.path.join(asset_dir, "victim.png"))
             self.item_img = pygame.image.load(os.path.join(asset_dir, "item.png"))
+            self.fire_img = pygame.image.load(os.path.join(asset_dir, "fire.png"))
+            self.wall_img = pygame.image.load(os.path.join(asset_dir, "wall.png"))
 
             self.agent1_img = pygame.transform.scale(self.agent1_img, (self.cell_size, self.cell_size))
             self.agent2_img = pygame.transform.scale(self.agent2_img, (self.cell_size, self.cell_size))
             self.victim_img = pygame.transform.scale(self.victim_img, (self.cell_size, self.cell_size))
             self.item_img = pygame.transform.scale(self.item_img, (self.cell_size, self.cell_size))
+            self.fire_img = pygame.transform.scale(self.fire_img, (self.cell_size, self.cell_size))
+            self.wall_img = pygame.transform.scale(self.wall_img, (self.cell_size, self.cell_size))
 
         except Exception as e:
             print(f"Error loading images: {e}")
@@ -122,14 +126,13 @@ class SimpleGridWorld:
         r1, d1 = self._move_agent(self.agent1_pos, a1, agent_id=1)
         r2, d2 = self._move_agent(self.agent2_pos, a2, agent_id=2)
 
-        reward = r1 + r2
-        done = d1 or d2
+        if d1 or d2:
+            return self.get_observations(), [-10, -10], True, {}
 
-        if not done and self._can_rescue_victim():
-            reward += 10
-            done = True
+        if self._can_rescue_victim():
+            return self.get_observations(), [10, 10], True, {}
 
-        return self.get_observations(), [reward, reward], done, {}
+        return self.get_observations(), [r1, r2], False, {}
 
     def _move_agent(self, pos, action, agent_id):
         x, y = pos
@@ -197,9 +200,9 @@ class SimpleGridWorld:
                 rect = pygame.Rect(j * self.cell_size, i * self.cell_size, self.cell_size, self.cell_size)
                 cell_type = self.grid[i, j]
                 if cell_type == WALL:
-                    pygame.draw.rect(self.screen, COLORS[WALL], rect)
+                    self.screen.blit(self.wall_img, (j*self.cell_size, i*self.cell_size))
                 elif cell_type == FIRE:
-                    pygame.draw.rect(self.screen, COLORS[FIRE], rect)
+                    self.screen.blit(self.fire_img, (j*self.cell_size, i*self.cell_size))
                 else:
                     pygame.draw.rect(self.screen, COLORS[EMPTY], rect)
                 pygame.draw.rect(self.screen, (0, 0, 0), rect, 1)
