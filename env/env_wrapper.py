@@ -84,22 +84,23 @@ class SimpleGridWorld:
         occupied = []
 
         # Place objects
+        self.victim_pos = (3,1)
+        occupied.append(self.victim_pos)
+
+        self.wall_pos = (1,3)
+        occupied.append(self.wall_pos)
+
+        self.fire_pos = (4,2)
+        occupied.append(self.fire_pos)
+        
         self.agent1_pos = self.random_position(occupied)
         occupied.append(self.agent1_pos)
 
         self.agent2_pos = self.random_position(occupied)
         occupied.append(self.agent2_pos)
-
-        self.victim_pos = self.random_position(occupied)
-        occupied.append(self.victim_pos)
-
-        self.item_pos = self.random_position(occupied)
+        
+        self.item_pos = (self.random_position(occupied))
         occupied.append(self.item_pos)
-
-        self.wall_pos = self.random_position(occupied)
-        occupied.append(self.wall_pos)
-
-        self.fire_pos = self.random_position(occupied)
 
         # Reset grid
         self.grid = np.zeros((self.size, self.size), dtype=int)
