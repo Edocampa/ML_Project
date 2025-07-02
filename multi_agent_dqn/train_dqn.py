@@ -1,58 +1,47 @@
 import numpy as np
-import torch
-from env import SimpleGridWorld
+from env_SingleAgent import SimpleSingleAgentEnv
 from dqn_agent import DQNAgent
 
 def encode_state(obs, env):
-    # [(x1,y1),(x2,y2)] + flag item
-    (x1,y1),(x2,y2) = obs
-    return np.array([x1,y1, x2,y2,
-                     int(env.agent1_has_item),
-                     int(env.agent2_has_item)], dtype=np.float32)
+    # obs is (x, y)
+    x, y = obs
+    has_item = int(env.agent_has_item)
+    # input: [x, y, has_item]
+    return np.array([x, y, has_item], dtype=np.float32)
 
 def main():
-    # Iperparametri
-    episodes = 500
+    env = SimpleSingleAgentEnv(size=5, randomize=True)
+    state_dim = 3
+    n_actions = 4
+    agent = DQNAgent(state_dim, n_actions)
+
+    n_episodes = 500
     max_steps = 200
 
-    # Crea env
-    env = SimpleGridWorld(size=5, randomize=True)
-    state_dim = 6
-    n_actions = 4
-    agent = DQNAgent(state_dim, n_actions, device=torch.device('cpu'))
-
-    for ep in range(1, episodes+1):
+    for ep in range(1, n_episodes + 1):
         obs = env.reset()
         state = encode_state(obs, env)
-        total_rewards = [0.0, 0.0]   # [agente1, agente2]
+        total_reward = 0
+        done = False
 
-        # ------- INNER LOOP DENTRO ep LOOP -------
-        for t in range(max_steps):
-            a = agent.select_action(state)
-            next_obs, (r1, r2), done, _ = env.step([a, a])
+        for step in range(max_steps):
+            action = agent.select_action(state)
+            next_obs, reward, done, _ = env.step(action)
             next_state = encode_state(next_obs, env)
 
-            # apprendimento su r1
-            agent.learn((state, a, r1, next_state, done))
+            agent.learn((state, action, reward, next_state, done))
 
             state = next_state
-            total_rewards[0] += r1
-            total_rewards[1] += r2
+            total_reward += reward
 
             if done:
                 break
 
-        # ------- PRINT DENTRO ep LOOP -------
-        print(
-            f"Ep {ep:4d} | "
-            f"Reward A1 {total_rewards[0]:6.1f} | "
-            f"Reward A2 {total_rewards[1]:6.1f} | "
-            f"ε {agent.eps:.2f}"
-        )
+        print(f"Episode {ep:4d} | Total Reward: {total_reward:6.1f} | Epsilon: {agent.eps:.3f}")
 
-    # salva pesi alla fine di tutti gli episodi
-    torch.save(agent.online_net.state_dict(), "dqn_weights.pth")
-
+    # Save model
+    import torch
+    torch.save(agent.net.state_dict(), "dqn_single_agent.pth")
 
 if __name__ == "__main__":
     main()
