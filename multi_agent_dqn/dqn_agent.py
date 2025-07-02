@@ -1,14 +1,13 @@
 import random
+from collections import deque, namedtuple
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from collections import deque, namedtuple
 
-# Transizione
 Transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state', 'done'))
 
-# Replay buffer FIFO
 class ReplayBuffer:
     def __init__(self, capacity):
         self.buffer = deque(maxlen=capacity)
@@ -22,7 +21,6 @@ class ReplayBuffer:
     def __len__(self):
         return len(self.buffer)
 
-# La Q-Network base
 class QNetwork(nn.Module):
     def __init__(self, state_dim, n_actions):
         super().__init__()
@@ -37,75 +35,61 @@ class QNetwork(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-# L’agente DQN
 class DQNAgent:
-    def __init__(self, state_dim, n_actions,
-                 buffer_size=100000, batch_size=64,
-                 gamma=0.99, lr=1e-3,
-                 eps_start=1.0, eps_end=0.05, eps_decay=1e-4,
-                 target_update_freq=1000,
-                 device=None):
-        self.device = device or torch.device('cpu')
-        self.n_actions = n_actions
-        self.gamma = gamma
+    def __init__(self,
+                 state_dim,
+                 n_actions,
+                 buffer_size=100000,
+                 batch_size=64,
+                 gamma=0.99,
+                 lr=1e-3,
+                 eps_start=1.0,
+                 eps_end=0.05,
+                 eps_decay=1e-4):
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.net = QNetwork(state_dim, n_actions).to(self.device)
+        self.optimizer = optim.Adam(self.net.parameters(), lr=lr)
+        self.buffer = ReplayBuffer(buffer_size)
         self.batch_size = batch_size
+        self.gamma = gamma
+
         self.eps = eps_start
-        self.eps_min = eps_end
+        self.eps_end = eps_end
         self.eps_decay = eps_decay
-        self.target_update = target_update_freq
-        self.step_count = 0
-
-        # reti online e target
-        self.online_net = QNetwork(state_dim, n_actions).to(self.device)
-        self.target_net = QNetwork(state_dim, n_actions).to(self.device)
-        self.target_net.load_state_dict(self.online_net.state_dict())
-
-        self.optimizer = optim.Adam(self.online_net.parameters(), lr=lr)
-        self.replay = ReplayBuffer(buffer_size)
-        self.loss_fn = nn.MSELoss()
 
     def select_action(self, state):
-        """ε-greedy: state è np.array float32"""
         if random.random() < self.eps:
-            return random.randrange(self.n_actions)
-        st = torch.from_numpy(state).float().unsqueeze(0).to(self.device)
-        with torch.no_grad():
-            qvals = self.online_net(st)
-        return int(qvals.argmax().item())
+            return random.randrange(self.net.net[-1].out_features)
+        else:
+            state_v = torch.FloatTensor(state).to(self.device).unsqueeze(0)
+            with torch.no_grad():
+                q_vals = self.net(state_v)
+            return int(q_vals.argmax(dim=1).item())
 
     def learn(self, transition):
-        """transition = (s,a,r,s2,done)"""
-        self.replay.push(*transition)
-        self.step_count += 1
+        # Unpack and store
+        self.buffer.push(*transition)
+        # Decay epsilon
+        self.eps = max(self.eps_end, self.eps - self.eps_decay)
 
-        # decay ε
-        self.eps = max(self.eps_min, self.eps - self.eps_decay)
-
-        if len(self.replay) < self.batch_size:
+        if len(self.buffer) < self.batch_size:
             return
 
-        # sample minibatch
-        batch = self.replay.sample(self.batch_size)
-        S  = torch.tensor([t.state      for t in batch], device=self.device)
-        A  = torch.tensor([t.action     for t in batch], device=self.device).unsqueeze(1)
-        R  = torch.tensor([t.reward     for t in batch], device=self.device).unsqueeze(1)
-        S2 = torch.tensor([t.next_state for t in batch], device=self.device)
-        D  = torch.tensor([t.done       for t in batch], device=self.device).unsqueeze(1).float()
+        batch = self.buffer.sample(self.batch_size)
+        states = torch.FloatTensor([t.state for t in batch]).to(self.device)
+        actions = torch.LongTensor([t.action for t in batch]).unsqueeze(1).to(self.device)
+        rewards = torch.FloatTensor([t.reward for t in batch]).unsqueeze(1).to(self.device)
+        next_states = torch.FloatTensor([t.next_state for t in batch]).to(self.device)
+        dones = torch.FloatTensor([t.done for t in batch]).unsqueeze(1).to(self.device)
 
-        # predizione Q(s,a)
-        Qpred = self.online_net(S).gather(1, A)
-
-        # target: r + γ max_a Q_target(s',a)
+        # Q(s, a)
+        q_pred = self.net(states).gather(1, actions)
+        # target: r + γ max_a' Q(s', a')
         with torch.no_grad():
-            Qnext = self.target_net(S2).max(1, keepdim=True)[0]
-            Qtarget = R + self.gamma * Qnext * (1 - D)
+            q_next = self.net(next_states).max(1, keepdim=True)[0]
+            q_target = rewards + self.gamma * q_next * (1 - dones)
 
-        # loss e ottimizzazione
-        loss = self.loss_fn(Qpred, Qtarget)
+        loss = nn.MSELoss()(q_pred, q_target)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-
-        # aggiorna target network ogni N passi
-        if self.step_count % self.target_update == 0:
-            self.target_net.load_state_dict(self.online_net.state_dict())
