@@ -1,47 +1,104 @@
+import os
 import numpy as np
-from env_SingleAgent import SimpleSingleAgentEnv
+import torch
+import pandas as pd
+from env_SingleAgent import SimpleSingleAgentEnv,ITEM
 from dqn_agent import DQNAgent
 
+# Storage for metrics
+rewards   = []
+lengths   = []
+successes = []
+collisions= []
+fires     = []
+losses    = []
+epsilons  = []
+
+# State encoding
 def encode_state(obs, env):
-    # obs is (x, y)
-    x, y = obs
-    has_item = int(env.agent_has_item)
-    # input: [x, y, has_item]
-    return np.array([x, y, has_item], dtype=np.float32)
+    size = env.size
+    # inizializzo zero tensor shape (5, size, size)
+    grid = np.zeros((5, size, size), dtype=np.float32)
 
-def main():
-    env = SimpleSingleAgentEnv(size=5, randomize=True)
-    state_dim = 3
+    # canale agent
+    x,y = obs
+    grid[0, x, y] = 1.0
+
+    # canale item (se presente ancora)
+    ix,iy = env.item_pos
+    if env.grid[ix, iy] == ITEM:
+        grid[1, ix, iy] = 1.0
+
+    # canale victim
+    vx,vy = env.victim_pos
+    grid[2, vx, vy] = 1.0
+
+    # canale wall
+    wx,wy = env.wall_pos
+    grid[3, wx, wy] = 1.0
+
+    # canale fire
+    fx,fy = env.fire_pos
+    grid[4, fx, fy] = 1.0
+
+    # flatten e ritorna
+    return grid.flatten()
+
+# Main training loop
+if __name__ == "__main__":
+    os.makedirs("results", exist_ok=True)
+
+    env       = SimpleSingleAgentEnv(size=5, randomize=True)
+    state_dim = 5 * env.size * env.size
     n_actions = 4
-    agent = DQNAgent(state_dim, n_actions)
+    agent     = DQNAgent(state_dim, n_actions, device=torch.device('cpu'))
 
-    n_episodes = 500
+    episodes  = 500
     max_steps = 200
 
-    for ep in range(1, n_episodes + 1):
-        obs = env.reset()
+    for ep in range(1, episodes+1):
+        obs   = env.reset()
         state = encode_state(obs, env)
-        total_reward = 0
-        done = False
+        R = col = fire = 0
 
-        for step in range(max_steps):
-            action = agent.select_action(state)
-            next_obs, reward, done, _ = env.step(action)
+        for t in range(max_steps):
+            a = agent.select_action(state)
+            next_obs, r, done, _ = env.step(a)
             next_state = encode_state(next_obs, env)
 
-            agent.learn((state, action, reward, next_state, done))
+            loss = agent.learn((state, a, r, next_state, done))
+            if loss is not None:
+                losses.append(loss)
+                epsilons.append(agent.eps)
 
             state = next_state
-            total_reward += reward
-
+            R    += r
+            if r == -1:  col += 1
+            if r == -10: fire+= 1
             if done:
                 break
 
-        print(f"Episode {ep:4d} | Total Reward: {total_reward:6.1f} | Epsilon: {agent.eps:.3f}")
+        # Append episode metrics
+        rewards.append(R)
+        lengths.append(t+1)
+        successes.append(int(R > 0 and fire == 0))
+        collisions.append(col)
+        fires.append(fire)
+
+        print(f"Ep {ep:4d} | Reward {R:6.1f} | eps {agent.eps:.3f}")
 
     # Save model
-    import torch
-    torch.save(agent.net.state_dict(), "dqn_single_agent.pth")
+    torch.save(agent.online_net.state_dict(), "results/dqn_weights.pth")
 
-if __name__ == "__main__":
-    main()
+    # Save episode metrics
+    df = pd.DataFrame({
+        'Reward':    rewards,
+        'Length':    lengths,
+        'Success':   successes,
+        'Collisions':collisions,
+        'Fires':     fires
+    })
+    df.to_csv("results/dqn_results.csv", index=False)
+
+    # Save loss & epsilon over batches
+    pd.DataFrame({'Loss': losses, 'Epsilon': epsilons}).to_csv("results/loss_eps.csv", index=False)
