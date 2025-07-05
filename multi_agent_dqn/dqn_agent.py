@@ -25,9 +25,7 @@ class QNetwork(nn.Module):
     def __init__(self, state_dim, n_actions):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(state_dim, 256),
-            nn.ReLU(),
-            nn.Linear(256, 128),
+            nn.Linear(state_dim, 128),
             nn.ReLU(),
             nn.Linear(128, 64),
             nn.ReLU(),
