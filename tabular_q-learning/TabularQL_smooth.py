@@ -3,20 +3,24 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Import your environment class (ensure this file is in the same directory)
+# adjust path so we can import your env class
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from env.env_SingleAgent import SimpleSingleAgentEnv
 
-# Q-Learning hyperparameters (can be modified for experiments)
-ALPHAS = [0.1, 0.5]          # Learning rates to experiment
-GAMMAS = [0.9, 0.99]         # Discount factors to experiment
-EPSILON_START = 1.0          # Initial exploration rate
-EPSILON_DECAY = 0.995        # Exploration decay per episode
+# Q-Learning hyperparameters
+ALPHAS = [0.1, 0.5]
+GAMMAS = [0.9, 0.99]
+EPSILON_START = 1.0
+EPSILON_DECAY = 0.995
 MIN_EPSILON = 0.01
 NUM_EPISODES = 5000
 MAX_STEPS_PER_EPISODE = 200
-N_ACTIONS = 4                # Up, Down, Left, Right
+N_ACTIONS = 4
+
+# smoothing window (number of episodes)
+SMOOTH_WINDOW = 50
+kernel = np.ones(SMOOTH_WINDOW) / SMOOTH_WINDOW
 
 
 def state_to_index(env):
@@ -49,7 +53,6 @@ class TabularQLearner:
             state = state_to_index(self.env)
             total_reward = 0
             steps = 0
-            done = False
             success = False
 
             for _ in range(MAX_STEPS_PER_EPISODE):
@@ -57,7 +60,6 @@ class TabularQLearner:
                 _, reward, done, _ = self.env.step(action)
                 next_state = state_to_index(self.env)
 
-                # Determine if this done is a successful rescue
                 if done and reward >= 10:
                     success = True
 
@@ -74,7 +76,6 @@ class TabularQLearner:
             rewards_per_episode.append(total_reward)
             steps_per_episode.append(steps)
             success_per_episode.append(1 if success else 0)
-
             epsilon = max(MIN_EPSILON, epsilon * EPSILON_DECAY)
 
         return rewards_per_episode, steps_per_episode, success_per_episode
@@ -96,46 +97,55 @@ class TabularQLearner:
 
 
 if __name__ == "__main__":
-    # Experiment over hyperparameters
+    # 1) Train for each (alpha, gamma)
     results = {}
     for alpha in ALPHAS:
         for gamma in GAMMAS:
+            print(f"Training α={alpha}, γ={gamma} …")
             env = SimpleSingleAgentEnv(size=5, randomize=False)
             agent = TabularQLearner(env, alpha, gamma)
-            print(f"Training with alpha={alpha}, gamma={gamma}")
             rewards, steps, successes = agent.train()
-            results[(alpha, gamma)] = (rewards, steps, successes)
+            results[(alpha, gamma)] = {
+                'reward': np.array(rewards),
+                'steps': np.array(steps),
+                'success': np.cumsum(successes) / np.arange(1, len(successes)+1)
+            }
 
-        # Visualize each metric on its own figure as a 2x2 grid
-    hyperparams = list(results.keys())
-    metrics_names = ['Reward per Episode', 'Steps per Episode', 'Success Rate Over Time']
-    metrics_data = [0, 1, 2]
+    # 2) Plot each metric with smoothing
+    metrics = [
+        ('reward',       'Total Reward per Episode'),
+        ('steps',        'Steps per Episode'),
+        ('success',      'Cumulative Success Rate')
+    ]
 
-    for metric_idx, title in zip(metrics_data, metrics_names):
-        fig, axes = plt.subplots(2, 2, figsize=(10, 8))
-        fig.suptitle(title, fontsize=16)
+    for key, title in metrics:
+        fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+        fig.suptitle(title, fontsize=18)
 
-        for i, (alpha, gamma) in enumerate(hyperparams):
-            row, col = divmod(i, 2)
+        for idx, ((alpha, gamma), data_dict) in enumerate(results.items()):
+            row, col = divmod(idx, 2)
             ax = axes[row, col]
+            data = data_dict[key]
 
-            data = results[(alpha, gamma)][metric_idx]
-            # For success rate, compute cumulative average
-            if metric_idx == 2:
-                data = np.cumsum(data) / np.arange(1, len(data) + 1)
+            # raw trace (light gray)
+            ax.plot(data, color='lightgray', label='raw')
 
-            ax.plot(data)
+            # smoothed trace
+            if len(data) >= SMOOTH_WINDOW:
+                smooth = np.convolve(data, kernel, mode='valid')
+                x = np.arange(SMOOTH_WINDOW-1, len(data))
+                ax.plot(x, smooth, label=f'{SMOOTH_WINDOW}-ep MA', linewidth=2)
+
             ax.set_title(f"α={alpha}, γ={gamma}")
             ax.set_xlabel("Episode")
-            ylabel = "Total Reward" if metric_idx == 0 else ("Steps" if metric_idx == 1 else "Success Rate")
-            ax.set_ylabel(ylabel)
+            ax.set_ylabel(title)
             ax.grid(True)
+            ax.legend()
 
-        # Hide any unused subplot (in case hyperparams != 4)
-        if len(hyperparams) < 4:
-            for j in range(len(hyperparams), 4):
-                fig.delaxes(axes.flat[j])
+        # remove any unused subplot
+        total_plots = len(ALPHAS) * len(GAMMAS)
+        for j in range(total_plots, 4):
+            fig.delaxes(axes.flat[j])
 
         plt.tight_layout(rect=[0, 0.03, 1, 0.95])
         plt.show()
-
