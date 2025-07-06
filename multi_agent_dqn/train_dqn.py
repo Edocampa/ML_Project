@@ -16,7 +16,7 @@ EXPERIMENTS = [
     dict(label='D-fastE',   buffer_size=100_000, batch_size=64, eps_decay=5e-6),
 ]
 
-EPISODES  = 500
+EPISODES  = 5000
 MAX_STEPS = 200
 RESULTS_DIR = Path('results')
 
@@ -70,7 +70,7 @@ def train_one_run(label: str, buffer_size: int, batch_size: int, eps_decay: floa
         metrics['Collisions'].append(col)
         metrics['Fires'].append(fire)
 
-        if (ep+1) % 50 == 0 or ep == 0:
+        if (ep+1) % 500 == 0 or ep == 0:
             print(f"{label}: Ep {ep+1:3d}/{EPISODES} | R={ep_R:6.1f} | ε={agent.eps:.3f}")
 
     # Persist
