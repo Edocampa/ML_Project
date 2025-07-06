@@ -1,9 +1,9 @@
 import random
-from collections import deque, namedtuple
-
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from collections import deque, namedtuple
 
 # Named tuple for replay
 Transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state', 'done'))
@@ -49,14 +49,14 @@ class DQNAgent:
                  target_update_freq=200,
                  device=None):
         self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.n_actions = n_actions
-        self.gamma     = gamma
-        self.batch_size= batch_size
-        self.eps       = eps_start
-        self.eps_min   = eps_end
-        self.eps_decay = eps_decay
+        self.n_actions     = n_actions
+        self.gamma         = gamma
+        self.batch_size    = batch_size
+        self.eps           = eps_start
+        self.eps_min       = eps_end
+        self.eps_decay     = eps_decay
         self.target_update = target_update_freq
-        self.step_count     = 0
+        self.step_count    = 0
 
         # Online and target networks
         self.online_net = QNetwork(state_dim, n_actions).to(self.device)
@@ -89,14 +89,20 @@ class DQNAgent:
 
         # Sample minibatch
         batch = self.replay.sample(self.batch_size)
-        states      = torch.tensor([t.state      for t in batch], device=self.device)
-        actions     = torch.tensor([t.action     for t in batch], device=self.device).unsqueeze(1)
-        rewards     = torch.tensor([t.reward     for t in batch], device=self.device).unsqueeze(1)
-        next_states = torch.tensor([t.next_state for t in batch], device=self.device)
-        dones       = torch.tensor([t.done       for t in batch], device=self.device).unsqueeze(1).float()
+
+        # Efficient stacking of states
+        states_np      = np.stack([t.state      for t in batch])
+        next_states_np = np.stack([t.next_state for t in batch])
+
+        states      = torch.from_numpy(states_np).float().to(self.device)
+        actions     = torch.tensor([t.action for t in batch], device=self.device).unsqueeze(1)
+        rewards     = torch.tensor([t.reward for t in batch], device=self.device).unsqueeze(1)
+        next_states = torch.from_numpy(next_states_np).float().to(self.device)
+        dones       = torch.tensor([t.done for t in batch], device=self.device).unsqueeze(1).float()
 
         # Q(s,a) prediction
         q_pred = self.online_net(states).gather(1, actions)
+
         # target: r + gamma * max_a Q_target(s',a)
         with torch.no_grad():
             q_next   = self.target_net(next_states).max(1, keepdim=True)[0]

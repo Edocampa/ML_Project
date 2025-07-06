@@ -17,7 +17,7 @@ COLORS = {
 }
 
 class SimpleSingleAgentEnv:
-    def __init__(self, size=5, randomize=True):
+    def __init__(self, size=5, randomize=False):
         self.size = size
         self.cell_size = 60
         self.grid = np.zeros((size, size))
@@ -63,6 +63,24 @@ class SimpleSingleAgentEnv:
             if pos not in exclude:
                 return pos
 
+    def _setup_fixed_map(self):
+        self.victim_pos = (3, 1)
+
+        self.wall_pos = (2, 1)
+
+        self.fire_pos = (4, 2)
+
+        self.agent_pos = (0,0)
+
+        self.item_pos = (1,4)
+
+        self.grid = np.zeros((self.size, self.size), dtype=int)
+        self.grid[self.agent_pos] = AGENT
+        self.grid[self.victim_pos] = VICTIM
+        self.grid[self.item_pos] = ITEM
+        self.grid[self.wall_pos] = WALL
+        self.grid[self.fire_pos] = FIRE
+        
     def _generate_random_map(self):
         occupied = []
         self.victim_pos = (3, 1)
@@ -89,7 +107,7 @@ class SimpleSingleAgentEnv:
 
     def reset(self):
         self.agent_has_item = False
-        self._generate_random_map()
+        self._setup_fixed_map
         return self.get_observation()
 
     def get_observation(self):
@@ -131,7 +149,7 @@ class SimpleSingleAgentEnv:
         if new_pos == self.fire_pos:
             return -10, True
 
-        return 0, False
+        return -0.1, False
 
     def _can_rescue_victim(self):
         ax, ay = self.agent_pos
