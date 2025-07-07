@@ -16,8 +16,8 @@ EXPERIMENTS = [
     dict(label='D-fastE',   buffer_size=100_000, batch_size=64, eps_decay=5e-6),
 ]
 
-EPISODES   = 5000   # <- cambialo qui
-MAX_STEPS  = 400    # griglia 10×10 più ampia
+EPISODES   = 5000   
+MAX_STEPS  = 400    
 RESULTS_DIR = Path('results')
 
 # ───────────────────────── state encoder ──────────────────────────
@@ -60,7 +60,7 @@ def train_one_run(label, buffer_size, batch_size, eps_decay):
         metrics['Success'].append(int(ep_R > 0 and fire == 0))
         metrics['Collisions'].append(col); metrics['Fires'].append(fire)
 
-        if (ep+1) % 500 == 0 or ep == 0:
+        if (ep+1) % 1000 == 0 or ep == 0:
             print(f"{label}: Ep {ep+1:4d}/{EPISODES} | R={ep_R:6.1f} | ε={agent.eps:.3f}")
 
     out = RESULTS_DIR/label; out.mkdir(parents=True, exist_ok=True)
