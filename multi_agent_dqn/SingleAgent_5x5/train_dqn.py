@@ -17,7 +17,7 @@ EXPERIMENTS = [
 ]
 
 EPISODES  = 5000
-MAX_STEPS = 200
+MAX_STEPS = 100
 RESULTS_DIR = Path('results')
 
 def encode_state(obs, env):
