@@ -16,7 +16,7 @@ EXPERIMENTS = [
     dict(label='D-fastE',   buffer_size=100_000, batch_size=64, eps_decay=5e-6),
 ]
 
-EPISODES   = 5000   
+EPISODES   = 5000    
 MAX_STEPS  = 400    
 RESULTS_DIR = Path('results')
 
