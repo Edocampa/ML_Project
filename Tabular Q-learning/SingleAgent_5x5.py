@@ -11,12 +11,12 @@ from env.env_SingleAgent import SimpleSingleAgentEnv
 
 # Q-Learning hyperparameters
 ALPHAS = [0.1, 0.5]
-GAMMAS = [0.9, 0.99]
+GAMMAS = [0.15, 0.99]
 EPSILON_START = 1.0
 EPSILON_DECAY = 0.995
 MIN_EPSILON = 0.01
 NUM_EPISODES = 5000
-MAX_STEPS_PER_EPISODE = 200
+MAX_STEPS_PER_EPISODE = 100
 N_ACTIONS = 4
 
 # smoothing window (number of episodes)
