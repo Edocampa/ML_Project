@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 import sys
 import os
-
+import time 
 # adjust path so we can import your env class
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from env.env_singleAgent_10dim import SimpleSingleAgentEnv
@@ -104,7 +104,14 @@ if __name__ == "__main__":
             print(f"Training α={alpha}, γ={gamma} on 10×10 grid…")
             env = SimpleSingleAgentEnv(size=10, randomize=False)
             agent = TabularQLearner(env, alpha, gamma)
+            
+            # ======== Profiling starts here ========
+            start_time = time.time()
             rewards, steps, successes = agent.train()
+            elapsed = time.time() - start_time
+            print(f" → Training took {elapsed:.2f} seconds")
+            # ======== Profiling ends here ========
+            
             results[(alpha, gamma)] = {
                 'reward': np.array(rewards),
                 'steps': np.array(steps),
