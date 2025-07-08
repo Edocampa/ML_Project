@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
     start_all = time.time()
     for ep in range(1, NUM_EPISODES + 1):
-        env = SimpleGridWorld(size=5, randomize=True)
+        env = SimpleGridWorld(size=5, randomize=False)
         obs = env.reset()
         state = state_to_index(env)
         total_r1 = 0.0
