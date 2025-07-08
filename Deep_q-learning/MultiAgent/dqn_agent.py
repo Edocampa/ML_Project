@@ -46,7 +46,7 @@ class DQNAgent:
         state_dim: int,
         n_actions: int,
         *,
-        buffer_size: int = 100_000,
+        buffer_size: int = 50_000,
         batch_size: int = 64,
         gamma: float = 0.99,
         lr: float = 1e-3,

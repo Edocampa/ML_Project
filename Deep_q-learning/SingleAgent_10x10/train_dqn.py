@@ -10,10 +10,10 @@ from dqn_agent import DQNAgent
 
 # ───────────────────────── hyper‑grid ──────────────────────────
 EXPERIMENTS = [
-    dict(label='A-base',    buffer_size=100_000, batch_size=64, eps_decay=1e-6),
-    dict(label='B-miniB',   buffer_size=100_000, batch_size=32, eps_decay=1e-6),
-    dict(label='C-smallRB', buffer_size=10_000,  batch_size=64, eps_decay=1e-6),
-    dict(label='D-fastE',   buffer_size=100_000, batch_size=64, eps_decay=5e-6),
+    dict(label='A-base',    buffer_size=20000, batch_size=32, eps_decay=2e-4),
+    dict(label='B-miniB',   buffer_size=40000, batch_size=32, eps_decay=2e-4),
+    dict(label='C-smallRB', buffer_size=20000,  batch_size=64, eps_decay=2e-4),
+    dict(label='D-fastE',   buffer_size=20000, batch_size=32, eps_decay=8e-4),
 ]
 
 EPISODES   = 5000    

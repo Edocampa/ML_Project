@@ -8,7 +8,7 @@ import torch
 from env_SingleAgent import SimpleSingleAgentEnv
 from dqn_agent import DQNAgent
 
-# Grid of experiments (modifica qui!)
+
 EXPERIMENTS = [
     dict(label='A-base',    buffer_size=100_000, batch_size=64, eps_decay=1e-6),
     dict(label='B-miniB',   buffer_size=100_000, batch_size=32, eps_decay=1e-6),
@@ -70,7 +70,7 @@ def train_one_run(label: str, buffer_size: int, batch_size: int, eps_decay: floa
         metrics['Collisions'].append(col)
         metrics['Fires'].append(fire)
 
-        if (ep+1) % 500 == 0 or ep == 0:
+        if (ep+1) % 1000 == 0 or ep == 0:
             print(f"{label}: Ep {ep+1:3d}/{EPISODES} | R={ep_R:6.1f} | ε={agent.eps:.3f}")
 
     # Persist
