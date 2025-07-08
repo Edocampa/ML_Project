@@ -80,7 +80,7 @@ def main():
             metrics[i]['Reward'].append(ep_R[i])
             metrics[i]['Success'].append(succ[i])
 
-        if (ep + 1) % 100 == 0 or ep == 0:
+        if (ep + 1) % 1000 == 0 or ep == 0:
             print(f"Ep {ep+1}/{EPISODES} | "
                   f"R0={ep_R[0]:5.1f} R1={ep_R[1]:5.1f} | "
                   f"ε0={agents[0].eps:.3f}")

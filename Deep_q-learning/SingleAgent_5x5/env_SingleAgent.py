@@ -17,6 +17,17 @@ COLORS = {
 }
 
 class SimpleSingleAgentEnv:
+
+        # -------------------------------------------------
+    # mappa azione → lista di tuple (prob, dx, dy)
+    _STOCHASTIC_MOVES = {
+        0: [(0.90, -1, 0),  (0.05, -1, +1), (0.05, -1, -1)],  # Up
+        1: [(0.90, +1, 0),  (0.05, +1, +1), (0.05, +1, -1)],  # Down
+        2: [(0.90,  0, -1), (0.05, -1, -1), (0.05, +1, -1)],  # Left
+        3: [(0.90,  0, +1), (0.05, -1, +1), (0.05, +1, +1)]   # Right
+    }
+    # -------------------------------------------------
+
     def __init__(self, size=5, randomize=False):
         self.size = size
         self.cell_size = 60
@@ -125,18 +136,21 @@ class SimpleSingleAgentEnv:
         return self.get_observation(), reward, False, {}
 
     def _move_agent(self, action):
-        x, y = self.agent_pos
-        if action == 0:  # Up
-            new_x, new_y = max(0, x - 1), y
-        elif action == 1:  # Down
-            new_x, new_y = min(self.size - 1, x + 1), y
-        elif action == 2:  # Left
-            new_x, new_y = x, max(0, y - 1)
-        elif action == 3:  # Right
-            new_x, new_y = x, min(self.size - 1, y + 1)
+        # 1) scegli la deviazione casuale in base alle probabilità
+        r = np.random.rand()
+        cum = 0.0
+        for p, dx, dy in self._STOCHASTIC_MOVES[action]:
+            cum += p
+            if r <= cum:
+                break
 
+        # 2) calcola la nuova posizione proposta (clippata ai bordi)
+        x, y = self.agent_pos
+        new_x = np.clip(x + dx, 0, self.size - 1)
+        new_y = np.clip(y + dy, 0, self.size - 1)
         new_pos = (new_x, new_y)
 
+        # 3) logica di interazione identica a prima
         if self.grid[new_pos] == WALL:
             return -1, False
 
@@ -150,6 +164,7 @@ class SimpleSingleAgentEnv:
             return -10, True
 
         return -0.1, False
+
 
     def _can_rescue_victim(self):
         ax, ay = self.agent_pos

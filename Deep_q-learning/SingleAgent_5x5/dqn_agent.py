@@ -40,7 +40,7 @@ class DQNAgent:
                  state_dim,
                  n_actions,
                  buffer_size=100000,
-                 batch_size=64,
+                 batch_size=32,
                  gamma=0.99,
                  lr=1e-3,
                  eps_start=1.0,
