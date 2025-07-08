@@ -5,17 +5,18 @@ import torch.nn as nn
 import torch.optim as optim
 from collections import deque, namedtuple
 
-# Named tuple for replay
+# Transition tuple
 Transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state', 'done'))
 
 class ReplayBuffer:
-    def __init__(self, capacity):
+    def __init__(self, capacity=100_000):
         self.buffer = deque(maxlen=capacity)
 
     def push(self, *args):
         self.buffer.append(Transition(*args))
 
-    def sample(self, batch_size):
+    def sample(self, batch_size=64):
+        # Return a list of Transition tuples
         return random.sample(self.buffer, batch_size)
 
     def __len__(self):
@@ -27,9 +28,9 @@ class QNetwork(nn.Module):
         self.net = nn.Sequential(
             nn.Linear(state_dim, 128),
             nn.ReLU(),
-            nn.Linear(128, 64),
+            nn.Linear(128, 128),
             nn.ReLU(),
-            nn.Linear(64, n_actions)
+            nn.Linear(128, n_actions)
         )
 
     def forward(self, x):
@@ -39,26 +40,30 @@ class DQNAgent:
     def __init__(self,
                  state_dim,
                  n_actions,
-                 buffer_size=100000,
-                 batch_size=32,
+                 buffer_size=100_000,
+                 batch_size=64,
                  gamma=0.99,
                  lr=1e-3,
                  eps_start=1.0,
-                 eps_end=0.1,
-                 eps_decay=1e-6,
-                 target_update_freq=200,
+                 eps_end=0.01,
+                 eps_decay_steps=100_000,
+                 target_update_freq=2_000,
                  device=None):
         self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.n_actions     = n_actions
-        self.gamma         = gamma
-        self.batch_size    = batch_size
-        self.eps           = eps_start
-        self.eps_min       = eps_end
-        self.eps_decay     = eps_decay
+        self.n_actions = n_actions
+        self.gamma     = gamma
+        self.batch_size = batch_size
+
+        # Epsilon schedule
+        self.eps = eps_start
+        self.eps_min = eps_end
+        self.eps_decay_steps = eps_decay_steps
+        self.eps_delta = (eps_start - eps_end) / eps_decay_steps
+
         self.target_update = target_update_freq
         self.step_count    = 0
 
-        # Online and target networks
+        # Networks
         self.online_net = QNetwork(state_dim, n_actions).to(self.device)
         self.target_net = QNetwork(state_dim, n_actions).to(self.device)
         self.target_net.load_state_dict(self.online_net.state_dict())
@@ -68,6 +73,10 @@ class DQNAgent:
         self.loss_fn   = nn.MSELoss()
 
     def select_action(self, state):
+        # Update epsilon
+        if self.step_count < self.eps_decay_steps:
+            self.eps = max(self.eps_min, self.eps - self.eps_delta)
+        # Epsilon-greedy
         if random.random() < self.eps:
             return random.randrange(self.n_actions)
         state_v = torch.from_numpy(state).float().unsqueeze(0).to(self.device)
@@ -75,35 +84,22 @@ class DQNAgent:
             qvals = self.online_net(state_v)
         return int(qvals.argmax(dim=1).item())
 
-    def learn(self, transition):
-        # transition = (state, action, reward, next_state, done)
-        self.replay.push(*transition)
-        self.step_count += 1
-
-        # Decay epsilon
-        self.eps = max(self.eps_min, self.eps - self.eps_decay)
-
-        # Wait until buffer is populated
+    def optimize(self):
         if len(self.replay) < self.batch_size:
             return None
+        # Sample batch as list of transitions
+        transitions = self.replay.sample(self.batch_size)
+        batch = Transition(*zip(*transitions))
 
-        # Sample minibatch
-        batch = self.replay.sample(self.batch_size)
+        # Convert to tensors
+        states      = torch.from_numpy(np.stack(batch.state)).float().to(self.device)
+        actions     = torch.tensor(batch.action, device=self.device).unsqueeze(1)
+        rewards     = torch.tensor(batch.reward, device=self.device).unsqueeze(1)
+        next_states = torch.from_numpy(np.stack(batch.next_state)).float().to(self.device)
+        dones       = torch.tensor(batch.done, device=self.device).unsqueeze(1).float()
 
-        # Efficient stacking of states
-        states_np      = np.stack([t.state      for t in batch])
-        next_states_np = np.stack([t.next_state for t in batch])
-
-        states      = torch.from_numpy(states_np).float().to(self.device)
-        actions     = torch.tensor([t.action for t in batch], device=self.device).unsqueeze(1)
-        rewards     = torch.tensor([t.reward for t in batch], device=self.device).unsqueeze(1)
-        next_states = torch.from_numpy(next_states_np).float().to(self.device)
-        dones       = torch.tensor([t.done for t in batch], device=self.device).unsqueeze(1).float()
-
-        # Q(s,a) prediction
+        # Compute current Q and target Q
         q_pred = self.online_net(states).gather(1, actions)
-
-        # target: r + gamma * max_a Q_target(s',a)
         with torch.no_grad():
             q_next   = self.target_net(next_states).max(1, keepdim=True)[0]
             q_target = rewards + self.gamma * q_next * (1 - dones)
@@ -112,9 +108,21 @@ class DQNAgent:
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+        return loss.item()
 
-        # Update target network periodically
+    def step(self, transition):
+        # Store and train
+        self.replay.push(*transition)
+        self.step_count += 1
+        loss = self.optimize()
+        # Periodic target network update
         if self.step_count % self.target_update == 0:
             self.target_net.load_state_dict(self.online_net.state_dict())
+        return loss
 
-        return loss.item()
+    def save(self, path):
+        torch.save(self.online_net.state_dict(), path)
+
+    def load(self, path):
+        self.online_net.load_state_dict(torch.load(path))
+        self.target_net.load_state_dict(self.online_net.state_dict())
