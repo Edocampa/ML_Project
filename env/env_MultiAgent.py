@@ -38,7 +38,7 @@ class SimpleGridWorld:
 
         # Initialize map
         if randomize:
-            self._generate_random_map()
+            self._generate_random_map() #I develop this function for the future work it is not used in the current project
         else:
             self._setup_fixed_map()
 
