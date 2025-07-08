@@ -4,7 +4,7 @@ from collections import defaultdict
 import sys
 import os
 import time 
-# adjust path so we can import your env class
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from env.env_singleAgent_10dim import SimpleSingleAgentEnv
 
@@ -18,7 +18,6 @@ NUM_EPISODES = 5000
 MAX_STEPS_PER_EPISODE = 100
 N_ACTIONS = 4
 
-# smoothing window (number of episodes)
 SMOOTH_WINDOW = 50
 kernel = np.ones(SMOOTH_WINDOW) / SMOOTH_WINDOW
 
@@ -105,6 +104,7 @@ if __name__ == "__main__":
             env = SimpleSingleAgentEnv(size=10, randomize=False)
             agent = TabularQLearner(env, alpha, gamma)
             
+            #I use this for evaluate the train time required for each scenario
             # ======== Profiling starts here ========
             start_time = time.time()
             rewards, steps, successes = agent.train()
@@ -118,7 +118,7 @@ if __name__ == "__main__":
                 'success': np.cumsum(successes) / np.arange(1, len(successes) + 1)
             }
 
-    # 2) Plot each metric with smoothing
+    # 2) Plot each metric
     metrics = [
         ('reward', 'Total Reward per Episode'),
         ('steps', 'Steps per Episode'),
@@ -149,7 +149,6 @@ if __name__ == "__main__":
             ax.grid(True)
             ax.legend()
 
-        # remove any unused subplot
         total_plots = len(ALPHAS) * len(GAMMAS)
         for j in range(total_plots, 4):
             fig.delaxes(axes.flat[j])

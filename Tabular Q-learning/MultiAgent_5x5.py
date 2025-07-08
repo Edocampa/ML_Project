@@ -4,7 +4,6 @@ from collections import defaultdict
 import time
 import sys, os
 
-# adjust path so we can import your environment class
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from env.env_MultiAgent import SimpleGridWorld  
 
@@ -17,9 +16,8 @@ MIN_EPSILON = 0.01
 NUM_EPISODES = 5000
 MAX_STEPS_PER_EPISODE = 100
 N_ACTIONS = 4
-SMOOTH_WINDOW = 50
 
-# Utility: moving average
+SMOOTH_WINDOW = 50
 kernel = np.ones(SMOOTH_WINDOW) / SMOOTH_WINDOW
 
 def state_to_index(env: SimpleGridWorld):
@@ -31,7 +29,7 @@ def state_to_index(env: SimpleGridWorld):
     return (x1, y1, x2, y2, h1, h2)
 
 if __name__ == '__main__':
-    # Initialize Q-tables and epsilon per agent
+    # Initialize Q-tables and epsilon per agent (I choose the Independent Q-learning)
     Q1 = defaultdict(lambda: np.zeros(N_ACTIONS))
     Q2 = defaultdict(lambda: np.zeros(N_ACTIONS))
     eps1 = EPSILON_START

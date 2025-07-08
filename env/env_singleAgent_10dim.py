@@ -3,7 +3,7 @@ import numpy as np
 import os
 import sys
 
-# Tile types
+#Costants
 EMPTY = 0
 WALL = 1
 AGENT = 2
@@ -11,7 +11,6 @@ VICTIM = 3
 ITEM = 4
 FIRE = 5
 
-# Colors for rendering simple cells
 COLORS = {
     EMPTY: (255, 255, 255),
     WALL: (50, 50, 50),
@@ -81,7 +80,6 @@ class SimpleSingleAgentEnv:
 
     def _generate_random_map(self):
         occupied = []
-        # start with fixed hazards
         self.victim_pos = (3, 1); occupied.append(self.victim_pos)
         self.wall_pos   = (1, 3); occupied.append(self.wall_pos)
         self.fire_pos   = (4, 2); occupied.append(self.fire_pos)
