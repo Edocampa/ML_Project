@@ -12,8 +12,8 @@ class ReplayBuffer:
     def __init__(self, capacity=100_000):
         self.buffer = deque(maxlen=capacity)
 
-    def push(self, *args):
-        self.buffer.append(Transition(*args))
+    def push(self, state, action, reward, next_state, done):
+        self.buffer.append(Transition(state, action, reward, next_state, done))
 
     def sample(self, batch_size=64):
         # Return a list of Transition tuples
@@ -26,11 +26,11 @@ class QNetwork(nn.Module):
     def __init__(self, state_dim, n_actions):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(state_dim, 128),
+            nn.Linear(state_dim, 64),
             nn.ReLU(),
-            nn.Linear(128, 128),
+            nn.Linear(64, 64),
             nn.ReLU(),
-            nn.Linear(128, n_actions)
+            nn.Linear(64, n_actions)
         )
 
     def forward(self, x):
@@ -42,12 +42,12 @@ class DQNAgent:
                  n_actions,
                  buffer_size=100_000,
                  batch_size=64,
-                 gamma=0.99,
+                 gamma=0.95,
                  lr=1e-3,
                  eps_start=1.0,
                  eps_end=0.01,
-                 eps_decay_steps=100_000,
-                 target_update_freq=2_000,
+                 eps_decay_steps=500_000,
+                 target_update_freq=1_000,
                  device=None):
         self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.n_actions = n_actions
@@ -112,6 +112,9 @@ class DQNAgent:
 
     def step(self, transition):
         # Store and train
+        if self.step_count < self.eps_decay_steps:
+            self.eps = max(self.eps_min, self.eps - self.eps_delta)
+
         self.replay.push(*transition)
         self.step_count += 1
         loss = self.optimize()

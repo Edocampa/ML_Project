@@ -11,14 +11,14 @@ from dqn_agent import DQNAgent
 
 # Experiment configurations
 EXPERIMENTS = [
-    dict(label='A-base',    buffer_size=100_000, batch_size=64,  eps_decay_steps=800_000),
-    dict(label='B-smallB',  buffer_size=100_000, batch_size=32,  eps_decay_steps=800_000),
-    dict(label='C-smallRB', buffer_size=10_000,   batch_size=64,  eps_decay_steps=200_000),
-    dict(label='D-fastE',   buffer_size=100_000, batch_size=64,  eps_decay_steps=200_000),
+    dict(label='A-base',    buffer_size=100_000, batch_size=64,  eps_decay_steps=1_000_000),
+    #dict(label='B-smallB',  buffer_size=100_000, batch_size=32,  eps_decay_steps=800_000),
+    #dict(label='C-smallRB', buffer_size=10_000,   batch_size=64,  eps_decay_steps=200_000),
+    #dict(label='D-fastE',   buffer_size=100_000, batch_size=64,  eps_decay_steps=200_000),
 ]
-EPISODES = 10000
+EPISODES = 15000
 MAX_STEPS = 200
-RESULTS_DIR = Path('results_10x10')
+RESULTS_DIR = Path('results')
 
 # State encoding
 def encode_state(obs, env):

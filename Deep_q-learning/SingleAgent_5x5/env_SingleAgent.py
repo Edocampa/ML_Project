@@ -118,7 +118,7 @@ class SimpleSingleAgentEnv:
 
     def reset(self):
         self.agent_has_item = False
-        self._setup_fixed_map
+        self._setup_fixed_map()
         return self.get_observation()
 
     def get_observation(self):
