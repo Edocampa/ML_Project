@@ -37,11 +37,18 @@ class QNetwork(nn.Module):
         return self.net(x)
 
 class DQNAgent:
-    def __init__(self, state_dim, n_actions,
-                 buffer_size=100_000, batch_size=64,
-                 gamma=0.99, lr=1e-3,
-                 eps_start=1.0, eps_end=0.01, eps_decay_steps=100_000,
-                 target_update_freq=1000, device=None):
+    def __init__(self, 
+                 state_dim, 
+                 n_actions,
+                 buffer_size=100_000, 
+                 batch_size=64,
+                 gamma=0.95, 
+                 lr=1e-4,
+                 eps_start=1.0,
+                 eps_end=0.01, 
+                 eps_decay_steps= 1_000_000,
+                 target_update_freq=1000, 
+                 device=None):
         self.device = device or torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.n_actions = n_actions
         self.gamma = gamma
@@ -101,8 +108,11 @@ class DQNAgent:
         return loss.item()
 
     def step(self, transition):
-        state, action, reward, next_state, done = transition
-        self.replay.push(state, action, reward, next_state, done)
+         # Store and train
+        if self.step_count < self.eps_decay_steps:
+            self.eps = max(self.eps_min, self.eps - self.eps_delta)
+
+        self.replay.push(*transition)
         self.step_count += 1
         loss = self.optimize()
         if self.step_count % self.target_update == 0:
