@@ -9,10 +9,10 @@ from env_SingleAgent import SimpleSingleAgentEnv
 from dqn_agent import DQNAgent
 
 EXPERIMENTS = [
-    dict(label='A-base',    buffer_size=100_000, batch_size=64, eps_decay_steps=100_000),
-    dict(label='B-miniB',   buffer_size=100_000, batch_size=32, eps_decay_steps=100_000),
-    dict(label='C-smallRB', buffer_size=10_000,  batch_size=64, eps_decay_steps=10_000),
-    dict(label='D-fastE',   buffer_size=100_000, batch_size=64, eps_decay_steps=20_000),
+    dict(label='A-base',    buffer_size=100_000, batch_size=64, eps_decay_steps=500_000),
+    dict(label='B-miniB',   buffer_size=100_000, batch_size=32, eps_decay_steps=500_000),
+    dict(label='C-smallRB', buffer_size=50_000,  batch_size=64, eps_decay_steps=500_000),
+    dict(label='D-fastE',   buffer_size=100_000, batch_size=64, eps_decay_steps=250_000),
 ]
 
 EPISODES  = 10000
@@ -104,8 +104,7 @@ def train_one_run(label: str, buffer_size: int, batch_size: int, eps_decay_steps
 def main():
     # Clean results if requested
     if len(sys.argv) > 1 and sys.argv[1] == 'clean':
-        if RESULTS_DIR.exists():
-            shutil.rmtree(RESULTS_DIR)
+        shutil.rmtree(RESULTS_DIR, ignore_errors=True)
         sys.exit(0)
 
     RESULTS_DIR.mkdir(exist_ok=True)
