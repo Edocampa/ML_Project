@@ -15,9 +15,9 @@ class ReplayBuffer:
     def push(self, state, action, reward, next_state, done):
         self.buffer.append(Transition(state, action, reward, next_state, done))
 
-    def sample(self, batch_size):
-        batch = random.sample(self.buffer, batch_size)
-        return Transition(*zip(*batch))
+    def sample(self, batch_size=64):
+        # Return a list of Transition tuples
+        return random.sample(self.buffer, batch_size)
 
     def __len__(self):
         return len(self.buffer)
@@ -26,11 +26,11 @@ class QNetwork(nn.Module):
     def __init__(self, input_dim, n_actions):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(input_dim, 128),
+            nn.Linear(input_dim, 64),
             nn.ReLU(),
-            nn.Linear(128, 128),
+            nn.Linear(64, 64),
             nn.ReLU(),
-            nn.Linear(128, n_actions)
+            nn.Linear(64, n_actions)
         )
 
     def forward(self, x):
@@ -43,7 +43,7 @@ class DQNAgent:
                  buffer_size=100_000, 
                  batch_size=64,
                  gamma=0.95, 
-                 lr=1e-4,
+                 lr=1e-3,
                  eps_start=1.0,
                  eps_end=0.01, 
                  eps_decay_steps= 1_000_000,
@@ -87,7 +87,9 @@ class DQNAgent:
     def optimize(self):
         if len(self.replay) < self.batch_size:
             return None
-        batch = self.replay.sample(self.batch_size)
+        transitions = self.replay.sample(self.batch_size)
+        batch = Transition(*zip(*transitions))
+        
         states = torch.FloatTensor(np.stack(batch.state)).to(self.device)
         actions = torch.LongTensor(batch.action).unsqueeze(1).to(self.device)
         rewards = torch.FloatTensor(batch.reward).unsqueeze(1).to(self.device)
