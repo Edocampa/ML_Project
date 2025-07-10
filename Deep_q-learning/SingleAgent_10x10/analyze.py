@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 
 RESULTS_DIR   = Path('results')
 CONFIGS       = ['A-base', 
-                 #'B-miniB', 
-                 #'C-smallRB', 
-                 #'D-fastE'
+                 'B-miniB', 
+                 'C-smallRB', 
+                 'D-fastE'
                  ]  # tutti e quattro i casi
 SMOOTH_WINDOW = 200
 FIGSIZE       = (12, 8)
@@ -69,4 +69,3 @@ for key, title in metrics:
     fig.savefig(out_file)
     plt.close(fig)
 
-print("Plots saved in", RESULTS_DIR)
