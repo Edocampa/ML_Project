@@ -34,7 +34,7 @@ def encode_state(obs, env):
 def train_one_run(cfg):
     label = cfg['label']
     print(f"\n=== RUN {label} ===")
-    env = SimpleSingleAgentEnv(size=10, randomize=True)
+    env = SimpleSingleAgentEnv(size=10, randomize=False)
     state_dim = 11
     n_actions = 4
     agent = DQNAgent(

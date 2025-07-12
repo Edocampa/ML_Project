@@ -31,7 +31,7 @@ def encode_state(obs, env):
 
 
 def train_one_run(label: str, buffer_size: int, batch_size: int, eps_decay_steps: int):
-    env = SimpleSingleAgentEnv(size=5, randomize=True)
+    env = SimpleSingleAgentEnv(size=5, randomize=False)
     state_dim, n_actions = 11, 4
     agent = DQNAgent(
         state_dim,
