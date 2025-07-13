@@ -16,7 +16,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 RESULTS_DIR  = Path('results')
-MA_WINDOW    = 200
+MA_WINDOW    = 50
 LINE_KW      = dict(linewidth=2, alpha=0.7)
 plt.style.use('seaborn-v0_8-darkgrid')
 rolling = lambda s: s.rolling(MA_WINDOW, min_periods=1).mean()

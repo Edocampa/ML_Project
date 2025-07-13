@@ -7,16 +7,16 @@ from env_MultiAgent import SimpleGridWorld
 from dqn_agent import DQNAgent                      
 
 # ───────── config ─────────
-BUFFER_SIZE = 50_000
+BUFFER_SIZE = 100_000
 BATCH_SIZE  = 64
-EPS_DECAY   = 5e-6
-EPISODES    = 10000
+EPS_DECAY   = 250_000
+EPISODES    = 25000
 MAX_STEPS   = 100
 RESULTS_DIR = Path('results')
 
 AGENT_CFG = dict(buffer_size=BUFFER_SIZE,
                  batch_size=BATCH_SIZE,
-                 eps_decay=EPS_DECAY,
+                 eps_decay_steps=EPS_DECAY,
                  device=torch.device('cpu'))
 
 # ───────── state encoder ─────────
@@ -42,7 +42,7 @@ ACTIONS_N  = 4
 
 # ───────── training loop ─────────
 def main():
-    env     = SimpleGridWorld(size=5, randomize=True)
+    env     = SimpleGridWorld(size=5, randomize=False)
     agents  = [DQNAgent(STATE_DIM, ACTIONS_N, **AGENT_CFG) for _ in range(2)]
     metrics = {i: dict(Reward=[], Success=[]) for i in range(2)}
 
@@ -63,8 +63,9 @@ def main():
                            for i in range(2)]
 
             for i in range(2):
-                agents[i].learn((states[i], actions[i], rewards[i],
+                agents[i].step((states[i], actions[i], rewards[i],
                                  next_states[i], done))
+
                 ep_R[i] += rewards[i]
                 states[i] = next_states[i]
 
