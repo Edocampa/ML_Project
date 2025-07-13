@@ -46,7 +46,7 @@ class DQNAgent:
                  lr=1e-3,
                  eps_start=1.0,
                  eps_end=0.01,
-                 eps_decay_steps=500_000,
+                 eps_decay_steps=250_000,
                  target_update_freq=1_000,
                  device=None):
         self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -111,9 +111,6 @@ class DQNAgent:
         return loss.item()
 
     def step(self, transition):
-        # Store and train
-        if self.step_count < self.eps_decay_steps:
-            self.eps = max(self.eps_min, self.eps - self.eps_delta)
 
         self.replay.push(*transition)
         self.step_count += 1
