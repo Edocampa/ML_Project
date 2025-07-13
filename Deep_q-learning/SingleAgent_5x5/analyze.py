@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 # -----------------------------------------------------------------------------
 RESULTS_DIR   = Path("results")
 CONFIGS       = ["A-base", "B-miniB", "C-smallRB", "D-fastE"]
-SMOOTH_WINDOW = 200
+SMOOTH_WINDOW = 50
 FIGSIZE       = (12, 8)
 
 kernel = np.ones(SMOOTH_WINDOW) / SMOOTH_WINDOW
