@@ -12,10 +12,10 @@ from dqn_agent import DQNAgent
 # Definition of all cases to analyze
 
 EXPERIMENTS = [
-    dict(label='A-base',    buffer_size=100_000, batch_size=64, eps_decay_steps=250_000),
-    dict(label='B-miniB',   buffer_size=100_000, batch_size=32, eps_decay_steps=250_000),
-    dict(label='C-smallRB', buffer_size=50_000,  batch_size=64, eps_decay_steps=250_000),
-    dict(label='D-fastE',   buffer_size=100_000, batch_size=64, eps_decay_steps=125_000),
+    dict(label='A-base',    buffer_size=10_000, batch_size=32, eps_decay_steps=100_000),
+    dict(label='B-miniB',   buffer_size=10_000, batch_size=16, eps_decay_steps=100_000),
+    dict(label='C-smallRB', buffer_size=5_000,  batch_size=32, eps_decay_steps=100_000),
+    dict(label='D-fastE',   buffer_size=10_000, batch_size=32, eps_decay_steps=50_000),
 ]
 
 

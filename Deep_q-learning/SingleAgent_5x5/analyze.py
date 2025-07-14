@@ -7,7 +7,11 @@ import matplotlib.pyplot as plt
 # config
 # -----------------------------------------------------------------------------
 RESULTS_DIR   = Path("results")
-CONFIGS       = ["A-base", "B-miniB", "C-smallRB", "D-fastE"]
+CONFIGS       = ["A-base", 
+                 "B-miniB", 
+                 "C-smallRB", 
+                 "D-fastE"
+                 ]
 SMOOTH_WINDOW = 50
 FIGSIZE       = (12, 8)
 
