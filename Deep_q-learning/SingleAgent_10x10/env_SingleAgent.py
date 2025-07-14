@@ -20,15 +20,14 @@ COLORS = {
 
 class SimpleSingleAgentEnv:
 
-           # -------------------------------------------------
-    # mappa azione → lista di tuple (prob, dx, dy)
+
     _STOCHASTIC_MOVES = {
         0: [(0.90, -1, 0),  (0.05, -1, +1), (0.05, -1, -1)],  # Up
         1: [(0.90, +1, 0),  (0.05, +1, +1), (0.05, +1, -1)],  # Down
         2: [(0.90,  0, -1), (0.05, -1, -1), (0.05, +1, -1)],  # Left
         3: [(0.90,  0, +1), (0.05, -1, +1), (0.05, +1, +1)]   # Right
     }
-    # -------------------------------------------------
+
 
     def __init__(self, size=10, randomize=False):
         self.size = size
@@ -76,7 +75,6 @@ class SimpleSingleAgentEnv:
                 return pos
 
     def _setup_fixed_map(self):
-        # Place key objects within a 10x10 grid
         self.victim_pos = (8, 1)
         self.wall_pos   = (7, 1)
         self.fire_pos   = (9, 2)
@@ -190,7 +188,6 @@ class SimpleSingleAgentEnv:
         pygame.time.wait(int(delay*1000))
 
 if __name__ == "__main__":
-    # instantiate a 10x10 environment
     env = SimpleSingleAgentEnv(size=10, randomize=False)
     done = False
     obs = env.reset()
