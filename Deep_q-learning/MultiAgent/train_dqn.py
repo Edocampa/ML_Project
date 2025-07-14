@@ -8,9 +8,9 @@ from dqn_agent import DQNAgent
 
 # Definition of hyperparameters
 
-BUFFER_SIZE = 100_000
-BATCH_SIZE  = 64
-EPS_DECAY   = 250_000
+BUFFER_SIZE = 10_000
+BATCH_SIZE  = 32
+EPS_DECAY   = 100_000
 EPISODES    = 25000
 MAX_STEPS   = 100
 RESULTS_DIR = Path('results')
@@ -25,8 +25,8 @@ AGENT_CFG = dict(buffer_size=BUFFER_SIZE,
 # Encoding of the states
 
 def encode_state(self_obs, other_obs, env, agent_id):
-    x,  y  = self_obs # agent 1
-    ox, oy = other_obs # agent 2
+    x,  y  = self_obs # agent 0
+    ox, oy = other_obs # agent 1
 
     ix, iy = env.item_pos
     vx, vy = env.victim_pos

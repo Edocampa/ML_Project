@@ -14,7 +14,7 @@ from dqn_agent import DQNAgent
 EXPERIMENTS = [
     dict(label='A-base',    buffer_size=100_000, batch_size=64,  eps_decay_steps=500_000),
     dict(label='B-miniB',  buffer_size=100_000, batch_size=32,  eps_decay_steps=500_000),
-    dict(label='C-smallRB', buffer_size=10_000,   batch_size=64,  eps_decay_steps=500_000),
+    dict(label='C-smallRB', buffer_size=50_000,   batch_size=64,  eps_decay_steps=500_000),
     dict(label='D-fastE',   buffer_size=100_000, batch_size=64,  eps_decay_steps=250_000),
 ]
 
