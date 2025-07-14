@@ -135,7 +135,6 @@ class SimpleGridWorld:
         self.grid[self.fire_pos] = FIRE
 
     def reset(self):
-        """Reset environment"""
         self.agent1_has_item = False
         self.agent2_has_item = False
         self._setup_fixed_map()

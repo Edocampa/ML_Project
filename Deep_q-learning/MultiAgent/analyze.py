@@ -1,15 +1,3 @@
-"""
-analyze_multi_dqn.py  –  v2
-============================
-Genera  **tre** grafici separati per il caso multi‑agent DQN:
-
-1. `reward_agent0.png`  – Reward (raw + MA) di Agent 0
-2. `reward_agent1.png`  – Reward (raw + MA) di Agent 1
-3. `success_cum.png`    – Success‑rate cumulativo del team
-
-Tutti i file sono salvati in `results_multi/`.
-"""
-
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -55,4 +43,3 @@ if csv0.exists():
     plt.grid(True); plt.tight_layout()
     plt.savefig(RESULTS_DIR / 'success_cum.png'); plt.close()
 
-print('✓ Grafici separati reward e cumulative success salvati in results_multi/')

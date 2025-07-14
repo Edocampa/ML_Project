@@ -3,9 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# -----------------------------------------------------------------------------
-# config
-# -----------------------------------------------------------------------------
+
 RESULTS_DIR   = Path("results")
 CONFIGS       = ["A-base", "B-miniB", "C-smallRB", "D-fastE"]
 SMOOTH_WINDOW = 50
@@ -13,9 +11,7 @@ FIGSIZE       = (12, 8)
 
 kernel = np.ones(SMOOTH_WINDOW) / SMOOTH_WINDOW
 
-# ---------------------------------------------------------------------------
-# load data
-# ---------------------------------------------------------------------------
+
 data = {}
 for label in CONFIGS:
     ep_csv = RESULTS_DIR / label / "episode_metrics.csv"
@@ -30,9 +26,9 @@ for label in CONFIGS:
                    np.arange(1, len(df_ep) + 1),
     }
 
-    # ---- cerca il file di loss -------------------------------------------
+
     loss_path_candidates = [
-        RESULTS_DIR / label / "loss_eps.csv",   # <-- aggiunto
+        RESULTS_DIR / label / "loss_eps.csv",   
         RESULTS_DIR / label / "train_loss.csv",
         RESULTS_DIR / label / "loss.csv",
     ]
@@ -50,13 +46,11 @@ metrics = [
     ("reward",  "Total Reward per Episode",  "Reward",  "Episode"),
     ("steps",   "Steps per Episode",         "Steps",   "Episode"),
     ("success", "Cumulative Success Rate",   "Success", "Episode"),
-    ("loss",    "Training Loss",             "Loss",    "Episode"),   # <-- qui
+    ("loss",    "Training Loss",             "Loss",    "Episode"),  
 ]
 
 
-# -----------------------------------------------------------------------------
-# plotting loop
-# -----------------------------------------------------------------------------
+
 for key, title, ylabel, xlabel in metrics:
     fig, axes = plt.subplots(2, 2, figsize=FIGSIZE)
     fig.suptitle(title, fontsize=16)
@@ -97,4 +91,3 @@ for key, title, ylabel, xlabel in metrics:
     fig.savefig(out_file, dpi=150)
     plt.close(fig)
 
-print("Plots saved in", RESULTS_DIR.resolve())
