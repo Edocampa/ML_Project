@@ -18,7 +18,6 @@ COLORS = {
 
 class SimpleSingleAgentEnv:
 
-        # -------------------------------------------------
     # mappa azione → lista di tuple (prob, dx, dy)
     _STOCHASTIC_MOVES = {
         0: [(0.90, -1, 0),  (0.05, -1, +1), (0.05, -1, -1)],  # Up
@@ -76,13 +75,9 @@ class SimpleSingleAgentEnv:
 
     def _setup_fixed_map(self):
         self.victim_pos = (3, 1)
-
         self.wall_pos = (2, 1)
-
         self.fire_pos = (4, 2)
-
         self.agent_pos = (0,0)
-
         self.item_pos = (1,4)
 
         self.grid = np.zeros((self.size, self.size), dtype=int)
@@ -204,7 +199,6 @@ class SimpleSingleAgentEnv:
         ax, ay = self.agent_pos
         self.screen.blit(self.agent_img, (ay * self.cell_size, ax * self.cell_size))
 
-        # HUD
         font = pygame.font.SysFont('Arial', 16)
         if self.agent_has_item:
             self.screen.blit(font.render("Agent: Has Item", True, (0, 0, 0)), (5, 5))

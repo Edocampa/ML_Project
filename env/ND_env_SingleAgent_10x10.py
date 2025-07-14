@@ -3,7 +3,6 @@ import numpy as np
 import os
 import sys
 
-# Tile types
 EMPTY = 0
 WALL = 1
 AGENT = 2
@@ -11,7 +10,6 @@ VICTIM = 3
 ITEM = 4
 FIRE = 5
 
-# Colors for rendering simple cells
 COLORS = {
     EMPTY: (255, 255, 255),
     WALL: (50, 50, 50),
@@ -20,7 +18,6 @@ COLORS = {
 
 class SimpleSingleAgentEnv:
 
-           # -------------------------------------------------
     # mappa azione → lista di tuple (prob, dx, dy)
     _STOCHASTIC_MOVES = {
         0: [(0.90, -1, 0),  (0.05, -1, +1), (0.05, -1, -1)],  # Up
@@ -182,7 +179,7 @@ class SimpleSingleAgentEnv:
         # agent
         ax, ay = self.agent_pos
         self.screen.blit(self.agent_img, (ay*self.cell_size, ax*self.cell_size))
-        # HUD
+
         font = pygame.font.SysFont('Arial', 16)
         if self.agent_has_item:
             self.screen.blit(font.render("Agent: Has Item", True, (0,0,0)), (5,5))

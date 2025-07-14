@@ -150,6 +150,7 @@ class SimpleSingleAgentEnv:
         # static victim
         vx, vy = self.victim_pos
         self.screen.blit(self.victim_img, (vy*self.cell_size, vx*self.cell_size))
+        
         # item (if not picked)
         if self.grid[self.item_pos] == ITEM:
             ix, iy = self.item_pos
@@ -157,7 +158,7 @@ class SimpleSingleAgentEnv:
         # agent
         ax, ay = self.agent_pos
         self.screen.blit(self.agent_img, (ay*self.cell_size, ax*self.cell_size))
-        # HUD
+
         font = pygame.font.SysFont('Arial', 16)
         if self.agent_has_item:
             self.screen.blit(font.render("Agent: Has Item", True, (0,0,0)), (5,5))

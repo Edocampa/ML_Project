@@ -189,7 +189,6 @@ class SimpleSingleAgentEnv:
         ax, ay = self.agent_pos
         self.screen.blit(self.agent_img, (ay * self.cell_size, ax * self.cell_size))
 
-        # HUD
         font = pygame.font.SysFont('Arial', 16)
         if self.agent_has_item:
             self.screen.blit(font.render("Agent: Has Item", True, (0, 0, 0)), (5, 5))
