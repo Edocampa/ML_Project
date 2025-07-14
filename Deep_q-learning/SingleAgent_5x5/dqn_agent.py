@@ -11,7 +11,7 @@ Transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state'
 # Definition of Replay Buffer
 
 class ReplayBuffer:
-    def __init__(self, capacity=100_000):
+    def __init__(self, capacity=10_000):
         self.buffer = deque(maxlen=capacity) # deque discard the oldest element when full
 
     def push(self, state, action, reward, next_state, done):
@@ -47,14 +47,14 @@ class DQNAgent:
     def __init__(self,
                  state_dim,
                  n_actions,
-                 buffer_size=100_000,
-                 batch_size=64,
+                 buffer_size=10_000,
+                 batch_size=32,
                  gamma=0.95,
                  lr=1e-3,
                  eps_start=1.0,
                  eps_end=0.01,
-                 eps_decay_steps=250_000,
-                 target_update_freq=1_000,
+                 eps_decay_steps=100_000,
+                 target_update_freq= 500,
                  device=None):
         self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.n_actions = n_actions
