@@ -8,6 +8,9 @@ import torch
 from env_SingleAgent import SimpleSingleAgentEnv
 from dqn_agent import DQNAgent
 
+
+# Definition of all cases to analyze
+
 EXPERIMENTS = [
     dict(label='A-base',    buffer_size=100_000, batch_size=64, eps_decay_steps=250_000),
     dict(label='B-miniB',   buffer_size=100_000, batch_size=32, eps_decay_steps=250_000),
@@ -15,10 +18,15 @@ EXPERIMENTS = [
     dict(label='D-fastE',   buffer_size=100_000, batch_size=64, eps_decay_steps=125_000),
 ]
 
+
+# Parameters for training
+
 EPISODES  = 10000
 MAX_STEPS = 100
 RESULTS_DIR = Path('results')
 
+
+# Encoding of the states
 
 def encode_state(obs, env):
     x, y     = obs
@@ -29,6 +37,8 @@ def encode_state(obs, env):
     has_item = int(env.agent_has_item)
     return np.array([x, y, ix, iy, vx, vy, wx, wy, fx, fy, has_item], dtype=np.float32)
 
+
+# Training process
 
 def train_one_run(label: str, buffer_size: int, batch_size: int, eps_decay_steps: int):
     env = SimpleSingleAgentEnv(size=5, randomize=False)
@@ -43,19 +53,28 @@ def train_one_run(label: str, buffer_size: int, batch_size: int, eps_decay_steps
         device=torch.device('cpu')
     )
 
+    # Saved metrics
+
     metrics = {k: [] for k in ['Reward', 'Length', 'Success', 'Collisions', 'Fires', 'Loss', 'Epsilon']}
+
+    # Training Loop
 
     for ep in range(1, EPISODES+1):
         obs = env.reset()
         state = encode_state(obs, env)
         ep_R = collisions = fires = 0
 
+        # Inner Step Loop with limit MAX_STEPS
+
         for t in range(1, MAX_STEPS+1):
             action = agent.select_action(state)
             next_obs, reward, done, _ = env.step(action)
             next_state = encode_state(next_obs, env)
 
+            # store transition and learn
+
             loss = agent.step((state, action, reward, next_state, done))
+
             state = next_state
             ep_R += reward
             collisions += int(reward == -1)
@@ -67,6 +86,8 @@ def train_one_run(label: str, buffer_size: int, batch_size: int, eps_decay_steps
 
             if done:
                 break
+
+        # Keep track of all metrics
 
         metrics['Reward'].append(ep_R)
         metrics['Length'].append(t)
@@ -102,10 +123,6 @@ def train_one_run(label: str, buffer_size: int, batch_size: int, eps_decay_steps
 
 
 def main():
-    # Clean results if requested
-    if len(sys.argv) > 1 and sys.argv[1] == 'clean':
-        shutil.rmtree(RESULTS_DIR, ignore_errors=True)
-        sys.exit(0)
 
     RESULTS_DIR.mkdir(exist_ok=True)
     all_runs = []

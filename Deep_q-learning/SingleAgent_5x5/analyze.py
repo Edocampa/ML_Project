@@ -30,9 +30,9 @@ for label in CONFIGS:
                    np.arange(1, len(df_ep) + 1),
     }
 
-    # ---- cerca il file di loss -------------------------------------------
+
     loss_path_candidates = [
-        RESULTS_DIR / label / "loss_eps.csv",   # <-- aggiunto
+        RESULTS_DIR / label / "loss_eps.csv",   
         RESULTS_DIR / label / "train_loss.csv",
         RESULTS_DIR / label / "loss.csv",
     ]
@@ -50,13 +50,11 @@ metrics = [
     ("reward",  "Total Reward per Episode",  "Reward",  "Episode"),
     ("steps",   "Steps per Episode",         "Steps",   "Episode"),
     ("success", "Cumulative Success Rate",   "Success", "Episode"),
-    ("loss",    "Training Loss",             "Loss",    "Episode"),   # <-- qui
+    ("loss",    "Training Loss",             "Loss",    "Episode"),  
 ]
 
 
-# -----------------------------------------------------------------------------
-# plotting loop
-# -----------------------------------------------------------------------------
+
 for key, title, ylabel, xlabel in metrics:
     fig, axes = plt.subplots(2, 2, figsize=FIGSIZE)
     fig.suptitle(title, fontsize=16)
@@ -88,7 +86,7 @@ for key, title, ylabel, xlabel in metrics:
 
         ax.set_title(label)
 
-    # rimuovi pannelli extra se meno di 4
+    
     for j in range(len(CONFIGS), 4):
         fig.delaxes(axes.flat[j])
 

@@ -8,19 +8,24 @@ from collections import deque, namedtuple
 # Transition tuple
 Transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state', 'done'))
 
+# Definition of Replay Buffer
+
 class ReplayBuffer:
     def __init__(self, capacity=100_000):
-        self.buffer = deque(maxlen=capacity)
+        self.buffer = deque(maxlen=capacity) # deque discard the oldest element when full
 
     def push(self, state, action, reward, next_state, done):
         self.buffer.append(Transition(state, action, reward, next_state, done))
 
+
+# sample a mini-batch of transitions
     def sample(self, batch_size=64):
-        # Return a list of Transition tuples
         return random.sample(self.buffer, batch_size)
 
     def __len__(self):
         return len(self.buffer)
+    
+# Definition of the network
 
 class QNetwork(nn.Module):
     def __init__(self, state_dim, n_actions):
@@ -35,6 +40,8 @@ class QNetwork(nn.Module):
 
     def forward(self, x):
         return self.net(x)
+    
+# Definition of the agent with all hyperparameters
 
 class DQNAgent:
     def __init__(self,
@@ -54,10 +61,11 @@ class DQNAgent:
         self.gamma     = gamma
         self.batch_size = batch_size
 
-        # Epsilon schedule
+        # Epsilon-greedy schedule
         self.eps = eps_start
         self.eps_min = eps_end
         self.eps_decay_steps = eps_decay_steps
+        #decrement applied at each step
         self.eps_delta = (eps_start - eps_end) / eps_decay_steps
 
         self.target_update = target_update_freq
@@ -68,30 +76,37 @@ class DQNAgent:
         self.target_net = QNetwork(state_dim, n_actions).to(self.device)
         self.target_net.load_state_dict(self.online_net.state_dict())
 
+        # Optimizer  and MSE Loss
         self.optimizer = optim.Adam(self.online_net.parameters(), lr=lr)
         self.replay    = ReplayBuffer(buffer_size)
         self.loss_fn   = nn.MSELoss()
 
+    # Selection of the action
+
     def select_action(self, state):
-        # Update epsilon
+        # Update epsilon until eps_min
         if self.step_count < self.eps_decay_steps:
             self.eps = max(self.eps_min, self.eps - self.eps_delta)
-        # Epsilon-greedy
+
+        # Exploration - Exploitation
         if random.random() < self.eps:
             return random.randrange(self.n_actions)
         state_v = torch.from_numpy(state).float().unsqueeze(0).to(self.device)
         with torch.no_grad():
             qvals = self.online_net(state_v)
         return int(qvals.argmax(dim=1).item())
+    
+    # Learning step
 
     def optimize(self):
         if len(self.replay) < self.batch_size:
             return None
-        # Sample batch as list of transitions
+        
+        # Sample random batch from replay buffer
         transitions = self.replay.sample(self.batch_size)
         batch = Transition(*zip(*transitions))
 
-        # Convert to tensors
+        # Convert to tensors to use Pytorch
         states      = torch.from_numpy(np.stack(batch.state)).float().to(self.device)
         actions     = torch.tensor(batch.action, device=self.device).unsqueeze(1)
         rewards     = torch.tensor(batch.reward, device=self.device).unsqueeze(1)
@@ -104,6 +119,8 @@ class DQNAgent:
             q_next   = self.target_net(next_states).max(1, keepdim=True)[0]
             q_target = rewards + self.gamma * q_next * (1 - dones)
 
+        # Compute Loss and back-propagation
+
         loss = self.loss_fn(q_pred, q_target)
         self.optimizer.zero_grad()
         loss.backward()
@@ -115,7 +132,8 @@ class DQNAgent:
         self.replay.push(*transition)
         self.step_count += 1
         loss = self.optimize()
-        # Periodic target network update
+
+        # Periodic target network update (every target_update_steps)
         if self.step_count % self.target_update == 0:
             self.target_net.load_state_dict(self.online_net.state_dict())
         return loss
