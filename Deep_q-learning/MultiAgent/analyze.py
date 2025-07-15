@@ -9,7 +9,7 @@ LINE_KW      = dict(linewidth=2, alpha=0.7)
 plt.style.use('seaborn-v0_8-darkgrid')
 rolling = lambda s: s.rolling(MA_WINDOW, min_periods=1).mean()
 
-# ───────── helper per reward plot ─────────
+
 def plot_reward(agent_id: int):
     csv = RESULTS_DIR / f'agent{agent_id}_metrics.csv'
     if not csv.exists():
@@ -26,12 +26,11 @@ def plot_reward(agent_id: int):
     plt.grid(True); plt.legend(frameon=False)
     plt.tight_layout(); plt.savefig(RESULTS_DIR / f'reward_agent{agent_id}.png'); plt.close()
 
-# ───────── reward grafici separati ─────────
+
 for i in (0,1):
     plot_reward(i)
 
-# ───────── cumulative success plot ─────────
-# success(i) è identico per i due file → prendo il primo
+
 csv0 = RESULTS_DIR / 'agent0_metrics.csv'
 if csv0.exists():
     succ = pd.read_csv(csv0)['Success'].values

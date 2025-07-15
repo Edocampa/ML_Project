@@ -3,9 +3,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# -----------------------------------------------------------------------------
-# config
-# -----------------------------------------------------------------------------
 RESULTS_DIR   = Path("results")
 CONFIGS       = ["A-base", 
                  "B-miniB", 
@@ -17,9 +14,7 @@ FIGSIZE       = (12, 8)
 
 kernel = np.ones(SMOOTH_WINDOW) / SMOOTH_WINDOW
 
-# ---------------------------------------------------------------------------
-# load data
-# ---------------------------------------------------------------------------
+
 data = {}
 for label in CONFIGS:
     ep_csv = RESULTS_DIR / label / "episode_metrics.csv"

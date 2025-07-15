@@ -32,11 +32,11 @@ def encode_state(self_obs, other_obs, env, agent_id):
 
 # Training loop 
 def train_one_run(
-    episodes: int = 25_000,
+    episodes: int = 25000,
     max_steps: int = 100,
-    buffer_size: int = 10_000,
+    buffer_size: int = 10000,
     batch_size: int = 32,
-    eps_decay: int = 100_000,
+    eps_decay: int = 100000,
     save_dir: Path | str = "results",
     device: torch.device | str = torch.device("cpu"),
     env_size: int = 5,
