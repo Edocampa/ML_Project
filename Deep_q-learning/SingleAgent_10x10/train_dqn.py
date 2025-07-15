@@ -12,10 +12,17 @@ from dqn_agent import DQNAgent
 # Definition of all cases to analyze
 
 EXPERIMENTS = [
+
     dict(label='A-base',    buffer_size=100_000, batch_size=64,  eps_decay_steps=500_000),
     dict(label='B-miniB',  buffer_size=100_000, batch_size=32,  eps_decay_steps=500_000),
     dict(label='C-smallRB', buffer_size=50_000,   batch_size=64,  eps_decay_steps=500_000),
     dict(label='D-fastE',   buffer_size=100_000, batch_size=64,  eps_decay_steps=250_000),
+
+    dict(label='A-base',    buffer_size=100000, batch_size=64,  eps_decay_steps=500000),
+    dict(label='B-miniB',  buffer_size=100000, batch_size=32,  eps_decay_steps=500000),
+    dict(label='C-smallRB', buffer_size=50000,   batch_size=64,  eps_decay_steps=500000),
+    dict(label='D-fastE',   buffer_size=100000, batch_size=64,  eps_decay_steps=250000),
+
 ]
 
 # Parameters for training
@@ -48,7 +55,7 @@ def train_one_run(cfg):
         buffer_size=cfg['buffer_size'],
         batch_size=cfg['batch_size'],
         eps_decay_steps=cfg['eps_decay_steps'],
-        target_update_freq=2000,
+        target_update_freq=1000,
         device=torch.device('cpu')
     )
 

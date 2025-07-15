@@ -63,7 +63,7 @@ class DQNAgent:
 
         # Epsilon-greedy schedule
         self.eps = eps_start
-        self.eps_min = eps_end
+        self.eps_min = eps_end 
         self.eps_decay_steps = eps_decay_steps
         #decrement applied at each step
         self.eps_delta = (eps_start - eps_end) / eps_decay_steps
