@@ -51,7 +51,7 @@ def train_one_run(
                       eps_decay_steps=eps_decay,
                       device=device)
 
-    # Creation of 2 instances of DQNAgent
+    # Create 2 instances of DQNAgent
 
     agents = [DQNAgent(STATE_DIM, ACTIONS_N, **common_cfg) for _ in range(2)]
 
