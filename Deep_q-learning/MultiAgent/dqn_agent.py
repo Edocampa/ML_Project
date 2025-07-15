@@ -11,7 +11,7 @@ Transition = namedtuple('Transition', ('state', 'action', 'reward', 'next_state'
 # Definition of Replay Buffer
 
 class ReplayBuffer:
-    def __init__(self, capacity=100_000):
+    def __init__(self, capacity=10_000):
         self.buffer = deque(maxlen=capacity) # deque discard the oldest element when full
 
     def push(self, state, action, reward, next_state, done):
@@ -19,7 +19,7 @@ class ReplayBuffer:
 
 
 # sample a mini-batch of transitions
-    def sample(self, batch_size=64):
+    def sample(self, batch_size=32):
         return random.sample(self.buffer, batch_size)
 
     def __len__(self):
