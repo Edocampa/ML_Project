@@ -49,7 +49,7 @@ def train_one_run(label: str, buffer_size: int, batch_size: int, eps_decay_steps
         buffer_size=buffer_size,
         batch_size=batch_size,
         eps_decay_steps=eps_decay_steps,
-        target_update_freq=1000,
+        target_update_freq=500,
         device=torch.device('cpu')
     )
 
