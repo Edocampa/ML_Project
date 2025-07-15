@@ -3,6 +3,26 @@ import pandas as pd
 import torch
 from pathlib import Path
 
+
+from env_MultiAgent import SimpleGridWorld     
+from dqn_agent import DQNAgent                      
+
+# Definition of hyperparameters
+
+BUFFER_SIZE = 10_000
+BATCH_SIZE  = 32
+EPS_DECAY   = 100_000
+EPISODES    = 25000
+MAX_STEPS   = 100
+RESULTS_DIR = Path('results')
+
+# common dict that include all hyparameters of the agents
+
+AGENT_CFG = dict(buffer_size=BUFFER_SIZE,
+                 batch_size=BATCH_SIZE,
+                 eps_decay_steps=EPS_DECAY,
+                 device=torch.device('cpu'))
+
 from env_MultiAgent import SimpleGridWorld  # ambiente 2‑agenti
 from dqn_agent import DQNAgent              
 
@@ -10,11 +30,17 @@ from dqn_agent import DQNAgent
 STATE_DIM = 13   # 11 feature base + other agent coordinates
 ACTIONS_N = 4   
 
+
 # Encoding of the states
 
 def encode_state(self_obs, other_obs, env, agent_id):
+
+    x,  y  = self_obs # agent 0
+    ox, oy = other_obs # agent 1
+
     x,  y  = self_obs
     ox, oy = other_obs
+
 
     ix, iy = env.item_pos
     vx, vy = env.victim_pos
@@ -29,6 +55,39 @@ def encode_state(self_obs, other_obs, env, agent_id):
         wx, wy, fx, fy,             # wall and fire
         int(has_item)               # flag if agent pick up item
     ], dtype=np.float32)
+
+
+STATE_DIM  = 13 # 11 + 2 (coordinates other agent)
+ACTIONS_N  = 4
+
+# ───────── training loop ─────────
+def main():
+
+    # Definition of env and 2 instance of DQNAgent for the 2 agents
+
+    env     = SimpleGridWorld(size=5, randomize=False)
+    agents  = [DQNAgent(STATE_DIM, ACTIONS_N, **AGENT_CFG) for _ in range(2)]
+
+    # Saved metrics
+
+    metrics = {i: dict(Reward=[], Success=[]) for i in range(2)}
+
+    # Training Loop
+
+    for ep in range(EPISODES):
+        obs_list = env.reset()   # [obs0, obs1], one per each agent
+        states   = [encode_state(obs_list[i], obs_list[1-i], env, i)
+                    for i in range(2)]
+
+        ep_R = [0.0, 0.0]      # cumulative reward per episode
+        succ = [0,   0]        # success episode flag
+
+    # Step Loop
+
+        for _ in range(MAX_STEPS):
+
+            # Selection of the action and step in the env
+
 
 
 # Training loop 
@@ -71,17 +130,26 @@ def train_one_run(
         for t in range(1, max_steps + 1):
 
              # Selection of the action and step in the env
+
             actions = [agents[i].select_action(states[i]) for i in range(2)]
 
             next_obs_list, rewards, done, info = env.step(actions)
 
             next_states = [encode_state(next_obs_list[i], next_obs_list[1 - i], env, i)
                            for i in range(2)]
+            
+            # Store transition and optimize each agent
 
            # Store transition and optimize each agent
            
             for i in range(2):
+
+                agents[i].step((states[i], actions[i], rewards[i],
+                                 next_states[i], done))
+
+
                 agents[i].step((states[i], actions[i], rewards[i], next_states[i], done))
+
                 ep_R[i] += rewards[i]
                 states[i] = next_states[i]
 
@@ -94,8 +162,17 @@ def train_one_run(
             succ = [int(r > 0) for r in ep_R]
 
         for i in range(2):
+
+            if 'success' in info:
+                succ[i] = int(info['success'][i])
+            else:
+                succ[i] = int(ep_R[i] > 0)      
+            metrics[i]['Reward'].append(ep_R[i])
+            metrics[i]['Success'].append(succ[i])
+
             metrics[i]["Reward"].append(ep_R[i])
             metrics[i]["Success"].append(succ[i])
+
 
         if (ep + 1) % 1000 == 0 or ep == 0:
             print(

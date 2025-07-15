@@ -73,6 +73,7 @@ class SimpleGridWorld:
             print(f"Error loading images: {e}")
             sys.exit(1)
 
+    #Not use in this project this function (is for future work)
     def random_position(self, exclude=None):
         exclude = exclude or []
         while True:
@@ -83,15 +84,10 @@ class SimpleGridWorld:
     def _setup_fixed_map(self):
         # Place objects
         self.victim_pos = (3,1)
-
         self.wall_pos = (1,3)
-
         self.fire_pos = (4,2)
-        
         self.agent1_pos = (0,0)
-
         self.agent2_pos = (0,1)
-        
         self.item_pos = (3,3)
 
         # Reset grid
@@ -102,26 +98,22 @@ class SimpleGridWorld:
         self.grid[self.item_pos] = ITEM
         self.grid[self.wall_pos] = WALL
         self.grid[self.fire_pos] = FIRE
-        
+    
+    #I put only the function but is not used in our project  
     def _generate_random_map(self):
         occupied = []
 
         # Place objects
         self.victim_pos = (3,1)
         occupied.append(self.victim_pos)
-
         self.wall_pos = (1,3)
         occupied.append(self.wall_pos)
-
         self.fire_pos = (4,2)
         occupied.append(self.fire_pos)
-        
         self.agent1_pos = self.random_position(occupied)
         occupied.append(self.agent1_pos)
-
         self.agent2_pos = self.random_position(occupied)
         occupied.append(self.agent2_pos)
-        
         self.item_pos = (self.random_position(occupied))
         occupied.append(self.item_pos)
 
@@ -143,7 +135,7 @@ class SimpleGridWorld:
 
     def get_observations(self):
         return [self.agent1_pos, self.agent2_pos]
-
+    #take for input a list of two actions and update the state of the grid 
     def step(self, actions):
         a1, a2 = actions
 

@@ -6,15 +6,16 @@ import os
 import time
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from env.env_singleAgent_10dim import SimpleSingleAgentEnv
+from env.ND_env_SingleAgent_5x5 import SimpleSingleAgentEnv
 
-# Q-Learning hyperparameters (deterministic pure backup rule)
+# Q-Learning hyperparameters
+# Note alpha now computed dynamically via visit counts
 GAMMAS = [0.15, 0.99]
 EPSILON_START = 1.0
 EPSILON_DECAY = 0.995
 MIN_EPSILON = 0.01
 NUM_EPISODES = 5000
-MAX_STEPS_PER_EPISODE = 200  # increased for larger grid
+MAX_STEPS_PER_EPISODE = 100
 N_ACTIONS = 4
 
 SMOOTH_WINDOW = 50
@@ -23,7 +24,7 @@ kernel = np.ones(SMOOTH_WINDOW) / SMOOTH_WINDOW
 
 def state_to_index(env):
     """
-    Hashable representation of state: (x, y, has_item).
+    Maps environment state to a hashable index for Q-table keys.
     Importante per rappresentare lo stato all'interno della tabella.
     """
     x, y = env.agent_pos
@@ -31,66 +32,74 @@ def state_to_index(env):
     return (x, y, has_item)
 
 
-class TabularQLearnerDeterministic:
+class TabularQLearnerStochastic:
     """
-    Tabular Q-Learning for deterministic environments,
-    using pure backup rule: Q[s,a] ← r + γ max_a' Q[s',a'].
+    Tabular Q-Learning for non-deterministic (stochastic) environments,
+    using dynamic step-size α = 1 / (1 + visits(s,a)).
     """
     def __init__(self, env, gamma):
         self.env = env
         self.gamma = gamma
         self.n_actions = N_ACTIONS
-        # Q-table: init with 0 (best practice)
         self.Q = defaultdict(lambda: np.zeros(self.n_actions, dtype=np.float32))
-    #epsilon-greedy policy 
+        # Visit counts for (s,a)
+        self.visits = defaultdict(lambda: np.zeros(self.n_actions, dtype=np.int32))
+
     def choose_action(self, state, epsilon):
-        #exploration
+        # Epsilon-greedy action selection
         if np.random.rand() < epsilon:
             return np.random.randint(self.n_actions)
-        #exploitation
         return int(np.argmax(self.Q[state]))
 
     def train(self):
-        rewards = [] #reward totale per episode
-        steps = []  # numero di step per completare l'episode
-        successes = []  #1 se l'episode ha avuto successo 0 altrimenti
+        rewards_per_episode = [] #reward totale per episode
+        steps_per_episode = [] # numero di step per completare l'episode
+        success_per_episode = [] #1 se l'episode ha avuto successo 0 altrimenti
         epsilon = EPSILON_START
 
         for ep in range(1, NUM_EPISODES + 1):
             self.env.reset()
             state = state_to_index(self.env)
             total_reward = 0.0
-            step_count = 0
+            steps = 0
             success = False
 
             for _ in range(MAX_STEPS_PER_EPISODE):
                 #scelta dell'azione con algoritmo epsilon-greedy
                 action = self.choose_action(state, epsilon)
-                #esecuzioone dell'azione nell'ambiente
+                #esecuzione dell'azione
                 _, reward, done, _ = self.env.step(action)
                 #hash del nuovo stato
                 next_state = state_to_index(self.env)
 
-                # pure backup update
-                self.Q[state][action] = reward + (0.0 if done else self.gamma * np.max(self.Q[next_state]))
+                if done and reward >= 10:
+                    success = True
+
+                # increment visit count and compute dynamic alpha
+                self.visits[state][action] += 1
+                alpha = 1.0 / (1 + self.visits[state][action])
+
+                # Q-learning update with dynamic α
+                old = self.Q[state][action]
+                target = reward + (0.0 if done else self.gamma * np.max(self.Q[next_state]))
+                self.Q[state][action] = (1 - alpha) * old + alpha * target
 
                 state = next_state
                 total_reward += reward
-                step_count += 1
-
+                steps += 1
                 if done:
-                    success = (reward >= 10)
                     break
 
-            rewards.append(total_reward)
-            steps.append(step_count)
-            successes.append(int(success))
-            #decrementa epsilon 
+            # decay epsilon
             epsilon = max(MIN_EPSILON, epsilon * EPSILON_DECAY)
 
-        return np.array(rewards), np.array(steps), np.array(successes)
+            rewards_per_episode.append(total_reward)
+            steps_per_episode.append(steps)
+            success_per_episode.append(1 if success else 0)
 
-    #valutazione sulla tabella precedentemente creata (Q-table) 
+        return rewards_per_episode, steps_per_episode, success_per_episode
+    
+    #effettuiamo l'evaluation sulla q-table precedentemente costruita
     def evaluate(self, episodes=100):
         total_returns = []
         for _ in range(episodes):
@@ -99,7 +108,6 @@ class TabularQLearnerDeterministic:
             ep_reward = 0.0
             done = False
             while not done:
-                #no exploration in questo caso
                 action = int(np.argmax(self.Q[state]))
                 _, reward, done, _ = self.env.step(action)
                 ep_reward += reward
@@ -112,22 +120,23 @@ if __name__ == '__main__':
     results = {}
 
     for gamma in GAMMAS:
-        print(f"Training deterministic 10×10 γ={gamma} …")
-        env = SimpleSingleAgentEnv(size=10, randomize=False)
-        learner = TabularQLearnerDeterministic(env, gamma)
+        print(f"Training stochastic γ={gamma} …")
+        env = SimpleSingleAgentEnv(size=5, randomize=False)
+        learner = TabularQLearnerStochastic(env, gamma)
 
-        start_time = time.time()
+        start = time.time()
         rewards, steps, successes = learner.train()
-        elapsed = time.time() - start_time
+        elapsed = time.time() - start
         print(f" → Training took {elapsed:.2f}s")
 
         cum_success = np.cumsum(successes) / np.arange(1, len(successes) + 1)
         results[gamma] = {
-            'reward': rewards,
-            'steps': steps,
+            'reward': np.array(rewards),
+            'steps': np.array(steps),
             'success': cum_success
         }
 
+    # Plotting metrics
     metrics = [
         ('reward',  'Total Reward per Episode'),
         ('steps',   'Steps per Episode'),
@@ -136,7 +145,7 @@ if __name__ == '__main__':
 
     for key, title in metrics:
         fig, axes = plt.subplots(1, len(results), figsize=(6 * len(results), 5))
-        fig.suptitle(f"Deterministic Q-Learning 10x10: {title}", fontsize=16)
+        fig.suptitle(f"Stochastic Q-Learning: {title}", fontsize=16)
 
         for idx, (gamma, data) in enumerate(results.items()):
             ax = axes[idx] if len(results) > 1 else axes
@@ -154,4 +163,3 @@ if __name__ == '__main__':
 
         plt.tight_layout(rect=[0, 0.03, 1, 0.95])
         plt.show()
-
