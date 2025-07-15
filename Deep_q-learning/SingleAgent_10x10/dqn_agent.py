@@ -47,14 +47,14 @@ class DQNAgent:
     def __init__(self,
                  state_dim,
                  n_actions,
-                 buffer_size=100_000,
+                 buffer_size=100000,
                  batch_size=64,
                  gamma=0.95,
                  lr=1e-3,
                  eps_start=1.0,
                  eps_end=0.01,
-                 eps_decay_steps=500_000,
-                 target_update_freq=1_000,
+                 eps_decay_steps=500000,
+                 target_update_freq=1000,
                  device=None):
         self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.n_actions = n_actions
