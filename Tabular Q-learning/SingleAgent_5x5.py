@@ -5,7 +5,6 @@ import sys
 import os
 import time
 
-# Add project root to path so we can import our environment
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from env.env_SingleAgent import SimpleSingleAgentEnv
 
@@ -25,6 +24,7 @@ kernel = np.ones(SMOOTH_WINDOW) / SMOOTH_WINDOW
 def state_to_index(env):
     """
     Maps environment state to a hashable index for Q-table keys.
+    Importante per rappresentare lo stato all'interno della tabella.
     """
     x, y = env.agent_pos
     has_item = int(env.agent_has_item)
@@ -49,9 +49,9 @@ class TabularQLearnerDeterministic:
         return int(np.argmax(self.Q[state]))
 
     def train(self):
-        rewards = []
-        steps = []
-        successes = []
+        rewards = [] #reward totale per episode
+        steps = []  # numero di step per completare l'episode
+        successes = []  #1 se l'episode ha avuto successo 0 altrimenti
         epsilon = EPSILON_START
 
         for ep in range(1, NUM_EPISODES + 1):
@@ -62,8 +62,11 @@ class TabularQLearnerDeterministic:
             success = False
 
             for _ in range(MAX_STEPS_PER_EPISODE):
+                #scelta dell'azione con algoritmo epsilon-greedy
                 action = self.choose_action(state, epsilon)
+                #esecuzione dell'azione
                 _, reward, done, _ = self.env.step(action)
+                #hash del nuovo stato
                 next_state = state_to_index(self.env)
 
                 # pure backup update
@@ -89,6 +92,7 @@ class TabularQLearnerDeterministic:
 
         return np.array(rewards), np.array(steps), np.array(successes, dtype=int)
 
+    #effettuiamo l'evaluation sulla q-table precedentemente costruita
     def evaluate(self, episodes=100):
         total_returns = []
         for _ in range(episodes):
@@ -108,7 +112,6 @@ class TabularQLearnerDeterministic:
 if __name__ == '__main__':
     results = {}
 
-    # Train for each gamma on the deterministic env
     for gamma in GAMMAS:
         print(f"Training deterministic γ={gamma} …")
         env = SimpleSingleAgentEnv(size=5, randomize=False)
@@ -136,7 +139,7 @@ if __name__ == '__main__':
 
     for key, title in metrics:
         fig, axes = plt.subplots(1, len(results), figsize=(6 * len(results), 5))
-        fig.suptitle(f"Stochastic Q-Learning: {title}", fontsize=16)
+        fig.suptitle(f"Deterministic Q-Learning 5x5: {title}", fontsize=16)
 
         for idx, (gamma, data) in enumerate(results.items()):
             ax = axes[idx] if len(results) > 1 else axes

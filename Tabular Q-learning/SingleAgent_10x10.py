@@ -5,7 +5,6 @@ import sys
 import os
 import time
 
-# Add project root to path so we can import our environment
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from env.env_singleAgent_10dim import SimpleSingleAgentEnv
 
@@ -25,6 +24,7 @@ kernel = np.ones(SMOOTH_WINDOW) / SMOOTH_WINDOW
 def state_to_index(env):
     """
     Hashable representation of state: (x, y, has_item).
+    Importante per rappresentare lo stato all'interno della tabella.
     """
     x, y = env.agent_pos
     has_item = int(env.agent_has_item)
@@ -40,18 +40,20 @@ class TabularQLearnerDeterministic:
         self.env = env
         self.gamma = gamma
         self.n_actions = N_ACTIONS
-        # Q-table: state-index -> action-values
+        # Q-table: init with 0 (best practice)
         self.Q = defaultdict(lambda: np.zeros(self.n_actions, dtype=np.float32))
-
+    #epsilon-greedy policy 
     def choose_action(self, state, epsilon):
+        #exploration
         if np.random.rand() < epsilon:
             return np.random.randint(self.n_actions)
+        #exploitation
         return int(np.argmax(self.Q[state]))
 
     def train(self):
-        rewards = []
-        steps = []
-        successes = []
+        rewards = [] #reward totale per episode
+        steps = []  # numero di step per completare l'episode
+        successes = []  #1 se l'episode ha avuto successo 0 altrimenti
         epsilon = EPSILON_START
 
         for ep in range(1, NUM_EPISODES + 1):
@@ -62,8 +64,11 @@ class TabularQLearnerDeterministic:
             success = False
 
             for _ in range(MAX_STEPS_PER_EPISODE):
+                #scelta dell'azione con algoritmo epsilon-greedy
                 action = self.choose_action(state, epsilon)
+                #esecuzioone dell'azione nell'ambiente
                 _, reward, done, _ = self.env.step(action)
+                #hash del nuovo stato
                 next_state = state_to_index(self.env)
 
                 # pure backup update
@@ -80,11 +85,12 @@ class TabularQLearnerDeterministic:
             rewards.append(total_reward)
             steps.append(step_count)
             successes.append(int(success))
-
+            #decrementa epsilon 
             epsilon = max(MIN_EPSILON, epsilon * EPSILON_DECAY)
 
         return np.array(rewards), np.array(steps), np.array(successes)
 
+    #valutazione sulla tabella precedentemente creata (Q-table) 
     def evaluate(self, episodes=100):
         total_returns = []
         for _ in range(episodes):
@@ -93,6 +99,7 @@ class TabularQLearnerDeterministic:
             ep_reward = 0.0
             done = False
             while not done:
+                #no exploration in questo caso
                 action = int(np.argmax(self.Q[state]))
                 _, reward, done, _ = self.env.step(action)
                 ep_reward += reward
@@ -104,7 +111,6 @@ class TabularQLearnerDeterministic:
 if __name__ == '__main__':
     results = {}
 
-    # Train for each gamma on the deterministic 10×10 env
     for gamma in GAMMAS:
         print(f"Training deterministic 10×10 γ={gamma} …")
         env = SimpleSingleAgentEnv(size=10, randomize=False)
@@ -122,7 +128,6 @@ if __name__ == '__main__':
             'success': cum_success
         }
 
-        # Plot metrics in single-row layout
     metrics = [
         ('reward',  'Total Reward per Episode'),
         ('steps',   'Steps per Episode'),
@@ -131,7 +136,7 @@ if __name__ == '__main__':
 
     for key, title in metrics:
         fig, axes = plt.subplots(1, len(results), figsize=(6 * len(results), 5))
-        fig.suptitle(f"Stochastic Q-Learning: {title}", fontsize=16)
+        fig.suptitle(f"Deterministic Q-Learning 10x10: {title}", fontsize=16)
 
         for idx, (gamma, data) in enumerate(results.items()):
             ax = axes[idx] if len(results) > 1 else axes

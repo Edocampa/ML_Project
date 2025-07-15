@@ -81,7 +81,7 @@ if __name__ == '__main__':
             # check team success (rescue)
             if done:
                 # _can_rescue_victim is true when rescue, else death by fire
-                if (r1 > 0 and r2 > 0):
+                if (r1 >= 10 and r2 >= 10):
                     success = True
                 break
 

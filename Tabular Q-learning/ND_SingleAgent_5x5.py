@@ -5,7 +5,6 @@ import sys
 import os
 import time
 
-# Add project root to path so we can import our environment
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from env.ND_env_SingleAgent_5x5 import SimpleSingleAgentEnv
 
@@ -26,6 +25,7 @@ kernel = np.ones(SMOOTH_WINDOW) / SMOOTH_WINDOW
 def state_to_index(env):
     """
     Maps environment state to a hashable index for Q-table keys.
+    Importante per rappresentare lo stato all'interno della tabella.
     """
     x, y = env.agent_pos
     has_item = int(env.agent_has_item)
@@ -41,7 +41,6 @@ class TabularQLearnerStochastic:
         self.env = env
         self.gamma = gamma
         self.n_actions = N_ACTIONS
-        # Q-table: state-index -> action-values
         self.Q = defaultdict(lambda: np.zeros(self.n_actions, dtype=np.float32))
         # Visit counts for (s,a)
         self.visits = defaultdict(lambda: np.zeros(self.n_actions, dtype=np.int32))
@@ -53,9 +52,9 @@ class TabularQLearnerStochastic:
         return int(np.argmax(self.Q[state]))
 
     def train(self):
-        rewards_per_episode = []
-        steps_per_episode = []
-        success_per_episode = []
+        rewards_per_episode = [] #reward totale per episode
+        steps_per_episode = [] # numero di step per completare l'episode
+        success_per_episode = [] #1 se l'episode ha avuto successo 0 altrimenti
         epsilon = EPSILON_START
 
         for ep in range(1, NUM_EPISODES + 1):
@@ -66,8 +65,11 @@ class TabularQLearnerStochastic:
             success = False
 
             for _ in range(MAX_STEPS_PER_EPISODE):
+                #scelta dell'azione con algoritmo epsilon-greedy
                 action = self.choose_action(state, epsilon)
+                #esecuzione dell'azione
                 _, reward, done, _ = self.env.step(action)
+                #hash del nuovo stato
                 next_state = state_to_index(self.env)
 
                 if done and reward >= 10:
@@ -96,7 +98,8 @@ class TabularQLearnerStochastic:
             success_per_episode.append(1 if success else 0)
 
         return rewards_per_episode, steps_per_episode, success_per_episode
-
+    
+    #effettuiamo l'evaluation sulla q-table precedentemente costruita
     def evaluate(self, episodes=100):
         total_returns = []
         for _ in range(episodes):
@@ -116,7 +119,6 @@ class TabularQLearnerStochastic:
 if __name__ == '__main__':
     results = {}
 
-    # Train for each gamma on the stochastic env
     for gamma in GAMMAS:
         print(f"Training stochastic γ={gamma} …")
         env = SimpleSingleAgentEnv(size=5, randomize=False)

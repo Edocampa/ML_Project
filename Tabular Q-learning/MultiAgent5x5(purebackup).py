@@ -4,7 +4,6 @@ from collections import defaultdict
 import time
 import sys, os
 
-# Add project root to path so we can import our environment
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from env.env_MultiAgent import SimpleGridWorld
 
@@ -51,8 +50,9 @@ if __name__ == '__main__':
             # ε-greedy actions
             a1 = np.random.randint(N_ACTIONS) if np.random.rand() < eps1 else int(np.argmax(Q1[state]))
             a2 = np.random.randint(N_ACTIONS) if np.random.rand() < eps2 else int(np.argmax(Q2[state]))
-
+            #esecuzione delle azioni
             _, (r1, r2), done, _ = env.step([a1, a2])
+            #hash del nuovo stato
             next_state = state_to_index(env)
 
             # pure backup updates: Q = r + γ max Q(next)
@@ -65,9 +65,10 @@ if __name__ == '__main__':
             steps += 1
 
             if done:
-                success = (r1 > 0 and r2 > 0)
+                success = (r1 >= 10 and r2 >= 10)
                 break
-
+        
+        #decay epsilon
         eps1 = max(MIN_EPSILON, eps1 * EPSILON_DECAY)
         eps2 = max(MIN_EPSILON, eps2 * EPSILON_DECAY)
 
@@ -76,6 +77,7 @@ if __name__ == '__main__':
         steps_log.append(steps)
         success_log.append(int(success))
 
+        #print di debug
         if ep % 1000 == 0:
             print(f"Episode {ep:5d} | R1={np.mean(rewards1[-1000:]):.2f} R2={np.mean(rewards2[-1000:]):.2f} "
                   f"Success={np.mean(success_log[-1000:]):.2f}")
