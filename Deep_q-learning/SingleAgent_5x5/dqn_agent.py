@@ -19,7 +19,7 @@ class ReplayBuffer:
 
 
 # sample a mini-batch of transitions
-    def sample(self, batch_size=64):
+    def sample(self, batch_size=32):
         return random.sample(self.buffer, batch_size)
 
     def __len__(self):
