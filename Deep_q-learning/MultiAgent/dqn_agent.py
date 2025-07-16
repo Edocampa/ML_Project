@@ -84,17 +84,13 @@ class DQNAgent:
     # Selection of the action
 
     def select_action(self, state):
-        # Update epsilon until eps_min
-        if self.step_count < self.eps_decay_steps:
-            self.eps = max(self.eps_min, self.eps - self.eps_delta)
 
         # Exploration - Exploitation
         if random.random() < self.eps:
             return random.randrange(self.n_actions)
         state_v = torch.from_numpy(state).float().unsqueeze(0).to(self.device)
         with torch.no_grad():
-            qvals = self.online_net(state_v)
-        return int(qvals.argmax(dim=1).item())
+            return int(self.online_net(state_v).argmax(dim=1).item())
     
     # Learning step
 
@@ -114,14 +110,14 @@ class DQNAgent:
         dones       = torch.tensor(batch.done, device=self.device).unsqueeze(1).float()
 
         # Compute current Q and target Q
-        q_pred = self.online_net(states).gather(1, actions)
+        q_predicted = self.online_net(states).gather(1, actions)
         with torch.no_grad():
             q_next   = self.target_net(next_states).max(1, keepdim=True)[0]
             q_target = rewards + self.gamma * q_next * (1 - dones)
 
         # Compute Loss and back-propagation
 
-        loss = self.loss_fn(q_pred, q_target)
+        loss = self.loss_fn(q_predicted, q_target)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -131,6 +127,11 @@ class DQNAgent:
 
         self.replay.push(*transition)
         self.step_count += 1
+
+        # Update epsilon until eps_min
+        if self.step_count < self.eps_decay_steps:
+            self.eps = max(self.eps_min, self.eps - self.eps_delta)
+
         loss = self.optimize()
 
         # Periodic target network update (every target_update_steps)
