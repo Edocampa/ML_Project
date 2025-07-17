@@ -67,7 +67,11 @@ def train_one_run(label: str, buffer_size: int, batch_size: int, eps_decay_steps
         # Inner Step Loop with limit MAX_STEPS
 
         for t in range(1, MAX_STEPS+1):
+
+            # Select an action
             action = agent.select_action(state)
+
+            # Give the action to the env and encoding new state
             next_obs, reward, done, _ = env.step(action)
             next_state = encode_state(next_obs, env)
 

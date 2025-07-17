@@ -102,7 +102,7 @@ class DQNAgent:
         transitions = self.replay.sample(self.batch_size)
         batch = Transition(*zip(*transitions))
 
-        # Convert to tensors to use Pytorch
+        # Convert to tensors to use Pytorch and add dimension to have 2-D
         states      = torch.from_numpy(np.stack(batch.state)).float().to(self.device)
         actions     = torch.tensor(batch.action, device=self.device).unsqueeze(1)
         rewards     = torch.tensor(batch.reward, device=self.device).unsqueeze(1)
@@ -110,6 +110,7 @@ class DQNAgent:
         dones       = torch.tensor(batch.done, device=self.device).unsqueeze(1).float()
 
         # Compute current Q and target Q
+        # gather() allows to take Q for each executed action
         q_predicted = self.online_net(states).gather(1, actions)
         with torch.no_grad():
             q_next   = self.target_net(next_states).max(1, keepdim=True)[0]
@@ -118,12 +119,18 @@ class DQNAgent:
         # Compute Loss and back-propagation
 
         loss = self.loss_fn(q_predicted, q_target)
+
+        # Zeros all tensors before backprop to avoid cumulative batch
         self.optimizer.zero_grad()
         loss.backward()
+
+        # After backprop update weights with Adam
         self.optimizer.step()
         return loss.item()
 
     def step(self, transition):
+
+        # Store transition in the buffer
 
         self.replay.push(*transition)
         self.step_count += 1
