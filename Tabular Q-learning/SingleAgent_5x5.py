@@ -92,23 +92,6 @@ class TabularQLearnerDeterministic:
 
         return np.array(rewards), np.array(steps), np.array(successes, dtype=int)
 
-    #effettuiamo l'evaluation sulla q-table precedentemente costruita
-    def evaluate(self, episodes=100):
-        total_returns = []
-        for _ in range(episodes):
-            self.env.reset()
-            state = state_to_index(self.env)
-            ep_reward = 0.0
-            done = False
-            while not done:
-                action = int(np.argmax(self.Q[state]))
-                _, reward, done, _ = self.env.step(action)
-                ep_reward += reward
-                state = state_to_index(self.env)
-            total_returns.append(ep_reward)
-        return np.mean(total_returns)
-
-
 if __name__ == '__main__':
     results = {}
 

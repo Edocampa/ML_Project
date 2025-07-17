@@ -72,9 +72,6 @@ class TabularQLearnerStochastic:
                 #hash del nuovo stato
                 next_state = state_to_index(self.env)
 
-                if done and reward >= 10:
-                    success = True
-
                 # increment visit count and compute dynamic alpha
                 self.visits[state][action] += 1
                 alpha = 1.0 / (1 + self.visits[state][action])
@@ -87,7 +84,10 @@ class TabularQLearnerStochastic:
                 state = next_state
                 total_reward += reward
                 steps += 1
+                
                 if done:
+                    if reward >= 10:
+                        success = True
                     break
 
             # decay epsilon
@@ -98,23 +98,6 @@ class TabularQLearnerStochastic:
             success_per_episode.append(1 if success else 0)
 
         return rewards_per_episode, steps_per_episode, success_per_episode
-    
-    #effettuiamo l'evaluation sulla q-table precedentemente costruita
-    def evaluate(self, episodes=100):
-        total_returns = []
-        for _ in range(episodes):
-            self.env.reset()
-            state = state_to_index(self.env)
-            ep_reward = 0.0
-            done = False
-            while not done:
-                action = int(np.argmax(self.Q[state]))
-                _, reward, done, _ = self.env.step(action)
-                ep_reward += reward
-                state = state_to_index(self.env)
-            total_returns.append(ep_reward)
-        return np.mean(total_returns)
-
 
 if __name__ == '__main__':
     results = {}
