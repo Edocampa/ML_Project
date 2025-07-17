@@ -1,6 +1,6 @@
 import torch
 from pathlib import Path
-from env_MultiAgent import SimpleGridWorld  # ambiente 2‑agenti
+from env_MultiAgent import SimpleGridWorld  # 2-agents environment
 from dqn_agent import DQNAgent         
 import numpy as np
 import pandas as pd     
@@ -39,12 +39,10 @@ def train_one_run(
     eps_decay: int = 100000,
     save_dir: Path | str = "results",
     device: torch.device | str = torch.device("cpu"),
-    env_size: int = 5,
-    randomize_env: bool = False,
 ):
 
     save_dir = Path(save_dir)
-    env = SimpleGridWorld(size=env_size, randomize=randomize_env)
+    env = SimpleGridWorld(size=5, randomize=False)
 
     common_cfg = dict(buffer_size=buffer_size,
                       batch_size=batch_size,
