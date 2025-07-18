@@ -101,9 +101,12 @@ class DQNAgent:
         
         # Sample random batch from replay buffer
         transitions = self.replay.sample(self.batch_size)
+
+        # zip allows to group all the components together
+        # Then we call Transition to make easy to use tensors in the following lines
         batch = Transition(*zip(*transitions))
 
-        # Convert to tensors to use Pytorch and add dimension to have 2-D
+        # Convert to tensors to use Pytorch and add dimension to have 2-D (unsqueeze)
         states      = torch.from_numpy(np.stack(batch.state)).float().to(self.device)
         actions     = torch.tensor(batch.action, device=self.device).unsqueeze(1)
         rewards     = torch.tensor(batch.reward, device=self.device).unsqueeze(1)
