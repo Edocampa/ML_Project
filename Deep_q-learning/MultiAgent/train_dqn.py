@@ -44,12 +44,15 @@ def train_one_run(
     save_dir = Path(save_dir)
     env = SimpleGridWorld(size=5, randomize=False)
 
+    # Dict used for shared parameters
+
     common_cfg = dict(buffer_size=buffer_size,
                       batch_size=batch_size,
                       eps_decay_steps=eps_decay,
                       device=device)
 
     # Create 2 instances of DQNAgent
+    # ** is equivalent to call 2 times DQNAgent with parameters included in common_cfg
 
     agents = [DQNAgent(STATE_DIM, ACTIONS_N, **common_cfg) for _ in range(2)]
 
