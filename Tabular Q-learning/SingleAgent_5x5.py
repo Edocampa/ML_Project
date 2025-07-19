@@ -24,7 +24,7 @@ kernel = np.ones(SMOOTH_WINDOW) / SMOOTH_WINDOW
 def state_to_index(env):
     """
     Maps environment state to a hashable index for Q-table keys.
-    Importante per rappresentare lo stato all'interno della tabella.
+    Important to represent the state into the Q-table.
     """
     x, y = env.agent_pos
     has_item = int(env.agent_has_item)
@@ -49,9 +49,9 @@ class TabularQLearnerDeterministic:
         return int(np.argmax(self.Q[state]))
 
     def train(self):
-        rewards = [] #reward totale per episode
-        steps = []  # numero di step per completare l'episode
-        successes = []  #1 se l'episode ha avuto successo 0 altrimenti
+        rewards = [] #Total reward per episode
+        steps = []  # number step for complete the episode
+        successes = []  #1 if success episode 0 otherwise
         epsilon = EPSILON_START
 
         for ep in range(1, NUM_EPISODES + 1):
@@ -62,11 +62,11 @@ class TabularQLearnerDeterministic:
             success = False
 
             for _ in range(MAX_STEPS_PER_EPISODE):
-                #scelta dell'azione con algoritmo epsilon-greedy
+                #choose action a
                 action = self.choose_action(state, epsilon)
-                #esecuzione dell'azione
+                #execute action a
                 _, reward, done, _ = self.env.step(action)
-                #hash del nuovo stato
+                #hash new state
                 next_state = state_to_index(self.env)
 
                 # pure backup update
@@ -113,7 +113,7 @@ if __name__ == '__main__':
             'success': cum_success
         }
     
-        # Plot metrics in single-row layout
+        # Plot metrics 
     metrics = [
         ('reward',  'Total Reward per Episode'),
         ('steps',   'Steps per Episode'),

@@ -73,7 +73,6 @@ class SimpleSingleAgentEnv:
                 return pos
 
     def _setup_fixed_map(self):
-        # Place key objects within a 10x10 grid
         self.victim_pos = (8, 1)
         self.wall_pos   = (7, 1)
         self.fire_pos   = (9, 2)
@@ -89,12 +88,10 @@ class SimpleSingleAgentEnv:
 
     def _generate_random_map(self):
         occupied = []
-        # start with fixed hazards
         self.victim_pos = (3, 1); occupied.append(self.victim_pos)
         self.wall_pos   = (1, 3); occupied.append(self.wall_pos)
         self.fire_pos   = (4, 2); occupied.append(self.fire_pos)
 
-        # randomize agent and item
         self.agent_pos  = self.random_position(occupied); occupied.append(self.agent_pos)
         self.item_pos   = self.random_position(occupied); occupied.append(self.item_pos)
 
@@ -107,7 +104,6 @@ class SimpleSingleAgentEnv:
 
     def reset(self):
         self.agent_has_item = False
-        # rebuild fixed map state
         self._setup_fixed_map()
         return self.get_observation()
 
@@ -169,14 +165,14 @@ class SimpleSingleAgentEnv:
                 else:
                     pygame.draw.rect(self.screen, COLORS[EMPTY], rect)
                 pygame.draw.rect(self.screen, (0,0,0), rect, 1)
-        # static victim
+
         vx, vy = self.victim_pos
         self.screen.blit(self.victim_img, (vy*self.cell_size, vx*self.cell_size))
-        # item (if not picked)
+
         if self.grid[self.item_pos] == ITEM:
             ix, iy = self.item_pos
             self.screen.blit(self.item_img, (iy*self.cell_size, ix*self.cell_size))
-        # agent
+
         ax, ay = self.agent_pos
         self.screen.blit(self.agent_img, (ay*self.cell_size, ax*self.cell_size))
 
@@ -187,7 +183,7 @@ class SimpleSingleAgentEnv:
         pygame.time.wait(int(delay*1000))
 
 if __name__ == "__main__":
-    # instantiate a 10x10 environment
+
     env = SimpleSingleAgentEnv(size=10, randomize=False)
     done = False
     obs = env.reset()

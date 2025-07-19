@@ -187,7 +187,6 @@ class SimpleSingleAgentEnv:
                     pygame.draw.rect(self.screen, COLORS[EMPTY], rect)
                 pygame.draw.rect(self.screen, (0, 0, 0), rect, 1)
 
-        # Draw static items
         vx, vy = self.victim_pos
         self.screen.blit(self.victim_img, (vy * self.cell_size, vx * self.cell_size))
 
@@ -195,7 +194,6 @@ class SimpleSingleAgentEnv:
             ix, iy = self.item_pos
             self.screen.blit(self.item_img, (iy * self.cell_size, ix * self.cell_size))
 
-        # Draw agent
         ax, ay = self.agent_pos
         self.screen.blit(self.agent_img, (ay * self.cell_size, ax * self.cell_size))
 
