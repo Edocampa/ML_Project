@@ -50,7 +50,7 @@ if __name__ == '__main__':
         success = False
 
         for _ in range(MAX_STEPS_PER_EPISODE):
-            # ε-greedy actions
+            # epsilon-greedy actions
             if np.random.rand() < eps1:
                 a1 = np.random.randint(N_ACTIONS)
             else:

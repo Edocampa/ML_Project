@@ -47,12 +47,12 @@ if __name__ == '__main__':
         success = False
 
         for _ in range(MAX_STEPS_PER_EPISODE):
-            # ε-greedy actions
+            # epsilon-greedy actions
             a1 = np.random.randint(N_ACTIONS) if np.random.rand() < eps1 else int(np.argmax(Q1[state]))
             a2 = np.random.randint(N_ACTIONS) if np.random.rand() < eps2 else int(np.argmax(Q2[state]))
-            #esecuzione delle azioni
+            #execute the actions
             _, (r1, r2), done, _ = env.step([a1, a2])
-            #hash del nuovo stato
+            #hash new state
             next_state = state_to_index(env)
 
             # pure backup updates: Q = r + γ max Q(next)
