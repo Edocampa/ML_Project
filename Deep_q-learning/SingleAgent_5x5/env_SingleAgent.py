@@ -18,14 +18,14 @@ COLORS = {
 
 class SimpleSingleAgentEnv:
 
-
+    # mappa azione → lista di tuple (prob, dx, dy)
     _STOCHASTIC_MOVES = {
         0: [(0.90, -1, 0),  (0.05, -1, +1), (0.05, -1, -1)],  # Up
         1: [(0.90, +1, 0),  (0.05, +1, +1), (0.05, +1, -1)],  # Down
         2: [(0.90,  0, -1), (0.05, -1, -1), (0.05, +1, -1)],  # Left
         3: [(0.90,  0, +1), (0.05, -1, +1), (0.05, +1, +1)]   # Right
     }
-
+    # -------------------------------------------------
 
     def __init__(self, size=5, randomize=False):
         self.size = size
@@ -75,13 +75,9 @@ class SimpleSingleAgentEnv:
 
     def _setup_fixed_map(self):
         self.victim_pos = (3, 1)
-
         self.wall_pos = (2, 1)
-
         self.fire_pos = (4, 2)
-
         self.agent_pos = (0,0)
-
         self.item_pos = (1,4)
 
         self.grid = np.zeros((self.size, self.size), dtype=int)
@@ -117,7 +113,7 @@ class SimpleSingleAgentEnv:
 
     def reset(self):
         self.agent_has_item = False
-        self._setup_fixed_map()
+        self._setup_fixed_map
         return self.get_observation()
 
     def get_observation(self):
@@ -135,6 +131,7 @@ class SimpleSingleAgentEnv:
         return self.get_observation(), reward, False, {}
 
     def _move_agent(self, action):
+        # 1) scegli la deviazione casuale in base alle probabilità
         r = np.random.rand()
         cum = 0.0
         for p, dx, dy in self._STOCHASTIC_MOVES[action]:
@@ -142,11 +139,13 @@ class SimpleSingleAgentEnv:
             if r <= cum:
                 break
 
+        # 2) calcola la nuova posizione proposta (clippata ai bordi)
         x, y = self.agent_pos
         new_x = np.clip(x + dx, 0, self.size - 1)
         new_y = np.clip(y + dy, 0, self.size - 1)
         new_pos = (new_x, new_y)
 
+        # 3) logica di interazione identica a prima
         if self.grid[new_pos] == WALL:
             return -1, False
 
@@ -188,7 +187,6 @@ class SimpleSingleAgentEnv:
                     pygame.draw.rect(self.screen, COLORS[EMPTY], rect)
                 pygame.draw.rect(self.screen, (0, 0, 0), rect, 1)
 
-        # Draw static items
         vx, vy = self.victim_pos
         self.screen.blit(self.victim_img, (vy * self.cell_size, vx * self.cell_size))
 
@@ -196,11 +194,9 @@ class SimpleSingleAgentEnv:
             ix, iy = self.item_pos
             self.screen.blit(self.item_img, (iy * self.cell_size, ix * self.cell_size))
 
-        # Draw agent
         ax, ay = self.agent_pos
         self.screen.blit(self.agent_img, (ay * self.cell_size, ax * self.cell_size))
 
-        
         font = pygame.font.SysFont('Arial', 16)
         if self.agent_has_item:
             self.screen.blit(font.render("Agent: Has Item", True, (0, 0, 0)), (5, 5))
