@@ -139,11 +139,12 @@ class DQNAgent:
         self.replay.push(*transition)
         self.step_count += 1
 
+
+        loss = self.optimize()
+
         # Update epsilon until eps_min
         if self.step_count < self.eps_decay_steps:
             self.eps = max(self.eps_min, self.eps - self.eps_delta)
-
-        loss = self.optimize()
 
         # Periodic target network update (every target_update_steps)
         if self.step_count % self.target_update == 0:
