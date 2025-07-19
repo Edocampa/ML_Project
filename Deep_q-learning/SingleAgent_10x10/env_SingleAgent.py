@@ -3,7 +3,6 @@ import numpy as np
 import os
 import sys
 
-# Tile types
 EMPTY = 0
 WALL = 1
 AGENT = 2
@@ -11,7 +10,6 @@ VICTIM = 3
 ITEM = 4
 FIRE = 5
 
-# Colors for rendering simple cells
 COLORS = {
     EMPTY: (255, 255, 255),
     WALL: (50, 50, 50),
@@ -20,14 +18,14 @@ COLORS = {
 
 class SimpleSingleAgentEnv:
 
-
+    # mappa azione → lista di tuple (prob, dx, dy)
     _STOCHASTIC_MOVES = {
         0: [(0.90, -1, 0),  (0.05, -1, +1), (0.05, -1, -1)],  # Up
         1: [(0.90, +1, 0),  (0.05, +1, +1), (0.05, +1, -1)],  # Down
         2: [(0.90,  0, -1), (0.05, -1, -1), (0.05, +1, -1)],  # Left
         3: [(0.90,  0, +1), (0.05, -1, +1), (0.05, +1, +1)]   # Right
     }
-
+    # -------------------------------------------------
 
     def __init__(self, size=10, randomize=False):
         self.size = size
@@ -90,12 +88,10 @@ class SimpleSingleAgentEnv:
 
     def _generate_random_map(self):
         occupied = []
-        # start with fixed hazards
         self.victim_pos = (3, 1); occupied.append(self.victim_pos)
         self.wall_pos   = (1, 3); occupied.append(self.wall_pos)
         self.fire_pos   = (4, 2); occupied.append(self.fire_pos)
 
-        # randomize agent and item
         self.agent_pos  = self.random_position(occupied); occupied.append(self.agent_pos)
         self.item_pos   = self.random_position(occupied); occupied.append(self.item_pos)
 
@@ -108,7 +104,6 @@ class SimpleSingleAgentEnv:
 
     def reset(self):
         self.agent_has_item = False
-        # rebuild fixed map state
         self._setup_fixed_map()
         return self.get_observation()
 
@@ -170,17 +165,17 @@ class SimpleSingleAgentEnv:
                 else:
                     pygame.draw.rect(self.screen, COLORS[EMPTY], rect)
                 pygame.draw.rect(self.screen, (0,0,0), rect, 1)
-        # static victim
+
         vx, vy = self.victim_pos
         self.screen.blit(self.victim_img, (vy*self.cell_size, vx*self.cell_size))
-        # item (if not picked)
+
         if self.grid[self.item_pos] == ITEM:
             ix, iy = self.item_pos
             self.screen.blit(self.item_img, (iy*self.cell_size, ix*self.cell_size))
-        # agent
+
         ax, ay = self.agent_pos
         self.screen.blit(self.agent_img, (ay*self.cell_size, ax*self.cell_size))
-        # HUD
+
         font = pygame.font.SysFont('Arial', 16)
         if self.agent_has_item:
             self.screen.blit(font.render("Agent: Has Item", True, (0,0,0)), (5,5))
@@ -188,6 +183,7 @@ class SimpleSingleAgentEnv:
         pygame.time.wait(int(delay*1000))
 
 if __name__ == "__main__":
+
     env = SimpleSingleAgentEnv(size=10, randomize=False)
     done = False
     obs = env.reset()
@@ -195,4 +191,6 @@ if __name__ == "__main__":
         action = np.random.randint(4)
         obs, reward, done, _ = env.step(action)
         env.render(delay=0.3)
+        print("Action:", action, "Next:", obs, "Reward:", reward)
+        
     pygame.quit()
