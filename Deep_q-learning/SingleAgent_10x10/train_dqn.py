@@ -66,7 +66,7 @@ def train_one_run(label: str, buffer_size: int, batch_size: int, eps_decay_steps
 
         for t in range(1, MAX_STEPS+1):
 
-                       # Select an action
+            # Select an action
             action = agent.select_action(state)
 
             # Give the action to the env and encoding new state
