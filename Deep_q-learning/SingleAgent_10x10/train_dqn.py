@@ -37,20 +37,19 @@ def encode_state(obs, env):
 
 # Training process
 
-def train_one_run(cfg):
-    label = cfg['label']
-    print(f"\n=== RUN {label} ===")
+def train_one_run(label: str, buffer_size: int, batch_size: int, eps_decay_steps: int):
     env = SimpleSingleAgentEnv(size=10, randomize=False)
-    state_dim = 11
-    n_actions = 4
+    state_dim, n_actions = 11, 4
     agent = DQNAgent(
-        state_dim, n_actions,
-        buffer_size=cfg['buffer_size'],
-        batch_size=cfg['batch_size'],
-        eps_decay_steps=cfg['eps_decay_steps'],
+        state_dim,
+        n_actions,
+        buffer_size=buffer_size,
+        batch_size=batch_size,
+        eps_decay_steps=eps_decay_steps,
         target_update_freq=1000,
         device=torch.device('cpu')
     )
+
 
       # Saved metrics
 
@@ -66,7 +65,11 @@ def train_one_run(cfg):
         # Inner Step Loop with limit MAX_STEPS
 
         for t in range(1, MAX_STEPS+1):
+
+                       # Select an action
             action = agent.select_action(state)
+
+            # Give the action to the env and encoding new state
             next_obs, reward, done, _ = env.step(action)
             next_state = encode_state(next_obs, env)
 
@@ -78,6 +81,7 @@ def train_one_run(cfg):
             ep_reward += reward
             collisions += int(reward == -1)
             fires += int(reward == -10)
+            
             if loss is not None:
                 metrics['Loss'].append(loss)
                 metrics['Epsilon'].append(agent.eps)
@@ -121,8 +125,9 @@ def main():
     RESULTS_DIR.mkdir(exist_ok=True)
     all_runs = []
     for cfg in EXPERIMENTS:
-        df_run = train_one_run(cfg)
-        all_runs.append(df_run)
+        print(f"\n=== RUN {cfg['label']} ===")
+        all_runs.append(train_one_run(**cfg))
+
     summary = pd.concat(all_runs, ignore_index=True)
     summary.to_csv(RESULTS_DIR/'summary_all.csv', index=False)
 
