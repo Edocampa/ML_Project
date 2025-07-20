@@ -88,6 +88,7 @@ class DQNAgent:
         # Exploration - Exploitation
         if random.random() < self.eps:
             return random.randrange(self.n_actions)
+        # Convert to tensor and add a dimension to have (1, state_dim) requested by network
         state_v = torch.from_numpy(state).float().unsqueeze(0).to(self.device)
         with torch.no_grad():
             return int(self.online_net(state_v).argmax(dim=1).item())
@@ -106,6 +107,7 @@ class DQNAgent:
         batch = Transition(*zip(*transitions))
 
         # Convert to tensors to use Pytorch and add dimension to have 2-D
+        # With unsqueeze(1) we have (B,1), usefull to use gather()
         states      = torch.from_numpy(np.stack(batch.state)).float().to(self.device)
         actions     = torch.tensor(batch.action, device=self.device).unsqueeze(1)
         rewards     = torch.tensor(batch.reward, device=self.device).unsqueeze(1)
@@ -116,6 +118,7 @@ class DQNAgent:
         # gather() allows to take Q for each executed action
         q_predicted = self.online_net(states).gather(1, actions)
         with torch.no_grad():
+            # take the Q-value max starting from s' executing a'
             q_next   = self.target_net(next_states).max(1, keepdim=True)[0]
             q_target = rewards + self.gamma * q_next * (1 - dones)
 
