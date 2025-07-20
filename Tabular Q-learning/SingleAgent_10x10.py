@@ -34,7 +34,7 @@ def state_to_index(env):
 class TabularQLearnerDeterministic:
     """
     Tabular Q-Learning for deterministic environments,
-    using pure backup rule: Q[s,a] ← r + γ max_a' Q[s',a'].
+    using pure backup rule: Q[s,a] ← r + (gamma) max_a' Q[s',a'].
     """
     def __init__(self, env, gamma):
         self.env = env
