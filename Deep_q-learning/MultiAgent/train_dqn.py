@@ -24,7 +24,7 @@ def encode_state(self_obs, other_obs, env, agent_id):
 
     return np.array([
         x,  y,  ox, oy,             # agent coordinates
-        ix, iy, vx, vy,             # ostatic items
+        ix, iy, vx, vy,             # static items
         wx, wy, fx, fy,             # wall and fire
         int(has_item)               # flag if agent pick up item
     ], dtype=np.float32)

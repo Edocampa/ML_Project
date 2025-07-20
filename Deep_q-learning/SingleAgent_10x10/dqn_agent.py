@@ -84,7 +84,6 @@ class DQNAgent:
     # Selection of the action
 
     def select_action(self, state):
-
         # Exploration - Exploitation
         if random.random() < self.eps:
             return random.randrange(self.n_actions)
@@ -107,7 +106,7 @@ class DQNAgent:
         batch = Transition(*zip(*transitions))
 
         # Convert to tensors to use Pytorch and add dimension to have 2-D
-         # With unsqueeze(1) we have (B,1), usefull to use gather()
+        # With unsqueeze(1) we have (B,1), usefull to use gather()
         states      = torch.from_numpy(np.stack(batch.state)).float().to(self.device)
         actions     = torch.tensor(batch.action, device=self.device).unsqueeze(1)
         rewards     = torch.tensor(batch.reward, device=self.device).unsqueeze(1)
